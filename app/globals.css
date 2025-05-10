@@ -39,6 +39,70 @@
 
 .grid-item {
   transition: all 0.3s ease-in-out;
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+/* Staggered animation for grid items */
+.grid-item:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.grid-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.grid-item:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.grid-item:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.grid-item:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.grid-item:nth-child(6) {
+  animation-delay: 0.3s;
+}
+.grid-item:nth-child(7) {
+  animation-delay: 0.35s;
+}
+.grid-item:nth-child(8) {
+  animation-delay: 0.4s;
+}
+.grid-item:nth-child(9) {
+  animation-delay: 0.45s;
+}
+.grid-item:nth-child(10) {
+  animation-delay: 0.5s;
+}
+.grid-item:nth-child(11) {
+  animation-delay: 0.55s;
+}
+.grid-item:nth-child(12) {
+  animation-delay: 0.6s;
+}
+.grid-item:nth-child(13) {
+  animation-delay: 0.65s;
+}
+.grid-item:nth-child(14) {
+  animation-delay: 0.7s;
+}
+.grid-item:nth-child(15) {
+  animation-delay: 0.75s;
+}
+.grid-item:nth-child(16) {
+  animation-delay: 0.8s;
+}
+.grid-item:nth-child(17) {
+  animation-delay: 0.85s;
+}
+.grid-item:nth-child(18) {
+  animation-delay: 0.9s;
+}
+.grid-item:nth-child(19) {
+  animation-delay: 0.95s;
+}
+.grid-item:nth-child(20) {
+  animation-delay: 1s;
 }
 
 /* Custom scrollbar */
@@ -74,4 +138,97 @@ input:focus {
   50% {
     border-color: white;
   }
+}
+
+/* Video background enhancements */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Landing page animations */
+.landing-page h1 {
+  animation: fadeInDown 0.8s ease-out;
+}
+
+.landing-page p {
+  animation: fadeInDown 0.8s 0.2s ease-out both;
+}
+
+.landing-page form {
+  animation: fadeInDown 0.8s 0.4s ease-out both;
+}
+
+.landing-page div:last-child {
+  animation: fadeInDown 0.8s 0.6s ease-out both;
+}
+
+/* Enhance hover effects with video background */
+.grid-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure text is readable on video background */
+h1,
+h2,
+h3,
+p,
+button,
+a {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* Search input focus effect */
+input:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+/* Page transition animations */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 500ms, transform 500ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 500ms, transform 500ms;
 }

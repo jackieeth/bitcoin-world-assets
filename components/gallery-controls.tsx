@@ -41,7 +41,7 @@ export function GalleryControls({
       </div> */}
 
       <div className="flex items-center space-x-2">
-        {/* <div className="hidden sm:flex items-center space-x-1 border-r border-white/10 pr-2">
+        <div className="hidden sm:flex items-center space-x-1 border-r border-white/10 pr-2">
           <Button
             variant={gridConfig.columns === 3 ? "default" : "ghost"}
             size="icon"
@@ -60,7 +60,7 @@ export function GalleryControls({
             <Grid3X3 className="h-4 w-4" />
             <span className="sr-only">4 Columns</span>
           </Button>
-          <Button
+          {/* <Button
             variant={gridConfig.columns === 7 ? "default" : "ghost"}
             size="icon"
             onClick={() => onGridConfigChange({ columns: 7 })}
@@ -68,10 +68,10 @@ export function GalleryControls({
           >
             <LayoutGrid className="h-4 w-4" />
             <span className="sr-only">5 Columns</span>
-          </Button>
+          </Button> */}
         </div>
 
-        <div className="hidden sm:flex items-center space-x-1 border-r border-white/10 pr-2">
+        {/* <div className="hidden sm:flex items-center space-x-1 border-r border-white/10 pr-2">
           <Button
             variant={gridConfig.gap === 0 ? "default" : "ghost"}
             size="icon"

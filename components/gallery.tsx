@@ -24,7 +24,11 @@ export type GridConfig = {
 // Sort options
 export type SortOption = "newest" | "oldest" | "title"
 
-export function Gallery() {
+interface GalleryProps {
+  initialFilter?: string
+}
+
+export function Gallery({ initialFilter = "" }: GalleryProps) {
   // State for items and filtered items
   const [items, setItems] = useState<Item[]>([])
   const [filteredItems, setFilteredItems] = useState<Item[]>([])
@@ -35,16 +39,40 @@ export function Gallery() {
 
   // State for grid configuration
   const [gridConfig, setGridConfig] = useState<GridConfig>({
-    columns: 6,
-    gap: 2,
+    columns: 4,
+    gap: 1,
   })
 
-  // Load items on mount
+  // Load items on mount and when initialFilter changes
   useEffect(() => {
     const data = generateItems(798)
     setItems(data)
-    setFilteredItems(data)
-  }, [])
+
+    // Apply initial filter if provided
+    if (initialFilter && initialFilter !== "all") {
+      const filtered = data.filter(
+        (item) =>
+          item.category.toLowerCase().includes(initialFilter.toLowerCase()) ||
+          item.title.toLowerCase().includes(initialFilter.toLowerCase()) ||
+          item.description.toLowerCase().includes(initialFilter.toLowerCase()),
+      )
+      setFilteredItems(filtered)
+
+      // If the filter matches a category exactly, set it as active
+      const matchingCategory = data.find(
+        (item) => item.category.toLowerCase() === initialFilter.toLowerCase(),
+      )?.category
+
+      if (matchingCategory) {
+        setActiveCategory(matchingCategory)
+      } else {
+        setActiveCategory("all")
+      }
+    } else {
+      setFilteredItems(data)
+      setActiveCategory("all")
+    }
+  }, [initialFilter])
 
   // Get unique categories from items
   const categories = ["all", ...Array.from(new Set(items.map((item) => item.category)))]

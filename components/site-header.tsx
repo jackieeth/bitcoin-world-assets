@@ -2,17 +2,29 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu } from "lucide-react"
+import { Menu, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  onBackToSearch?: () => void
+  showBackButton?: boolean
+}
+
+export function SiteHeader({ onBackToSearch, showBackButton = false }: SiteHeaderProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/90 backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/50 backdrop-blur-md">
       <div className="container flex h-16 items-center px-4">
-        <div className="mr-4 flex">
+        <div className="mr-4 flex items-center">
+          {showBackButton && onBackToSearch ? (
+            <Button variant="ghost" size="icon" onClick={onBackToSearch} className="mr-2">
+              <ArrowLeft className="h-5 w-5" />
+              <span className="sr-only">Back to search</span>
+            </Button>
+          ) : null}
+
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-xl font-bold tracking-wider">BITCOIN WORLD ASSETS</span>
           </Link>

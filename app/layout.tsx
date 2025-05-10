@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Space_Mono } from "next/font/google"
+import { VideoBackground } from "@/components/video-background"
 import "./globals.css"
 
 // Using Space Mono as it's similar to a terminal font and widely available
@@ -23,7 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${spaceMono.variable} font-mono`}>{children}</body>
+      <body className={`${spaceMono.variable} font-mono`}>
+        <VideoBackground />
+        {children}
+      </body>
     </html>
   )
 }
