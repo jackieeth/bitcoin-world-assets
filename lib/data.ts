@@ -14,17 +14,17 @@ function randomDate() {
 // Generate placeholder items for the demo
 export function generateItems(count: number): Item[] {
   return Array.from({ length: count }).map((_, index) => {
-    const id = index + 1
+    const id = index
     const category = categories[Math.floor(Math.random() * categories.length)]
 
     return {
       id,
-      title: `Item ${id}`,
-      description: `Description for item ${id}`,
+      title: `${id}.518357.bitmap`,
+      description: `Nakamoto Matrix Parcel ${id}`,
       category,
       // Use a placeholder image service with grayscale filter
-      image: `/placeholder.svg?height=500&width=500&text=Item+${id}`,
-      date: randomDate(),
+      image: `https://img-cdn.magiceden.dev/da:t/rs:fit:400:0:0/plain/https%3A%2F%2Frunescape.id%2Fparcel518357c%2F518357p${id}.png`,
+      date: id,
     }
   })
 }

@@ -35,13 +35,13 @@ export function Gallery() {
 
   // State for grid configuration
   const [gridConfig, setGridConfig] = useState<GridConfig>({
-    columns: 4,
-    gap: 1,
+    columns: 6,
+    gap: 2,
   })
 
   // Load items on mount
   useEffect(() => {
-    const data = generateItems(24)
+    const data = generateItems(798)
     setItems(data)
     setFilteredItems(data)
   }, [])

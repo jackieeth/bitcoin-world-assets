@@ -52,18 +52,18 @@ export function GalleryControls({
             <span className="sr-only">3 Columns</span>
           </Button>
           <Button
-            variant={gridConfig.columns === 4 ? "default" : "ghost"}
+            variant={gridConfig.columns === 5 ? "default" : "ghost"}
             size="icon"
-            onClick={() => onGridConfigChange({ columns: 4 })}
+            onClick={() => onGridConfigChange({ columns: 5 })}
             className="h-8 w-8"
           >
             <Grid3X3 className="h-4 w-4" />
             <span className="sr-only">4 Columns</span>
           </Button>
           <Button
-            variant={gridConfig.columns === 5 ? "default" : "ghost"}
+            variant={gridConfig.columns === 7 ? "default" : "ghost"}
             size="icon"
-            onClick={() => onGridConfigChange({ columns: 5 })}
+            onClick={() => onGridConfigChange({ columns: 7 })}
             className="h-8 w-8"
           >
             <LayoutGrid className="h-4 w-4" />

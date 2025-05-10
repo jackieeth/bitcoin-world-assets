@@ -11,9 +11,9 @@ const spaceMono = Space_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Grayscale Grid Gallery",
-  description: "A minimalist black and white grid gallery",
-    generator: 'v0.dev'
+  title: "BITCOIN WORLD ASSETS",
+  description: "Build Digital Worlds on Bitcoin Blocks",
+    generator: 'qAI',
 }
 
 export default function RootLayout({
