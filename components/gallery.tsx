@@ -1,97 +1,97 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { GridItem } from "@/components/grid-item"
-import { GalleryControls } from "@/components/gallery-controls"
-import { generateItems } from "@/lib/data"
+import { useState, useEffect } from "react";
+import { GridItem } from "@/components/grid-item";
+import { GalleryControls } from "@/components/gallery-controls";
+import { generateItems } from "@/lib/data";
 
 // Define the item type
 export type Item = {
-  id: number
-  title: string
-  description: string
-  category: string
-  image: string
-  date: string
-  sat: number
-}
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  image: string;
+  date: string;
+  sat: number;
+};
 
 // Grid configuration options
 export type GridConfig = {
-  columns: number
-  gap: number
-}
+  columns: number;
+  gap: number;
+};
 
 // Sort options
-export type SortOption = "newest" | "oldest"// | "title"
+export type SortOption = "newest" | "oldest"; // | "title"
 
 interface GalleryProps {
-  initialFilter?: string
-  itemsData: Item[] // Add this prop to accept external data
+  initialFilter?: string;
+  itemsData: Item[]; // Add this prop to accept external data
 }
 
 export function Gallery({ initialFilter = "", itemsData }: GalleryProps) {
   // State for items and filtered items
-  const [items, setItems] = useState<Item[]>([])
-  const [filteredItems, setFilteredItems] = useState<Item[]>([])
+  const [items, setItems] = useState<Item[]>([]);
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
 
   // State for filters and sorting
-  const [activeCategory, setActiveCategory] = useState<string>("all")
-  const [sortBy, setSortBy] = useState<SortOption>("newest")
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   // State for grid configuration
   const [gridConfig, setGridConfig] = useState<GridConfig>({
     columns: 6,
     gap: 2,
-  })
+  });
 
   // Load items from props on mount
   useEffect(() => {
-    setItems(itemsData)
-    setFilteredItems(itemsData) // display all items without filtering
-    setActiveCategory("all")
-  }, [itemsData])
+    setItems(itemsData);
+    setFilteredItems(itemsData); // display all items without filtering
+    setActiveCategory("all");
+  }, [itemsData]);
 
   // Get unique categories from items
   // const categories = ["all", ...Array.from(new Set(items.map((item) => item.category)))]
-  const categories = ["all", "rare-sats", "uncommon-sats", "common-sats"]
+  const categories = ["all", "rare-sats", "uncommon-sats", "common-sats"];
 
   // Handle category filter change
   const handleCategoryChange = (category: string) => {
-    setActiveCategory(category)
+    setActiveCategory(category);
 
     if (category === "all") {
-      setFilteredItems(items)
+      setFilteredItems(items);
     } else {
-      setFilteredItems(items.filter((item) => item.category === category))
+      setFilteredItems(items.filter((item) => item.category === category));
     }
-  }
+  };
 
   // Handle sort change
   const handleSortChange = (option: SortOption) => {
-    setSortBy(option)
+    setSortBy(option);
 
-    const sorted = [...filteredItems]
+    const sorted = [...filteredItems];
 
     switch (option) {
       case "newest":
-        sorted.sort((a, b) => b.sat - a.sat)
-        break
+        sorted.sort((a, b) => b.sat - a.sat);
+        break;
       case "oldest":
-        sorted.sort((a, b) => a.sat - b.sat)
-        break
+        sorted.sort((a, b) => a.sat - b.sat);
+        break;
       // case "title":
       //   sorted.sort((a, b) => a.title.localeCompare(b.title))
       //   break
     }
 
-    setFilteredItems(sorted)
-  }
+    setFilteredItems(sorted);
+  };
 
   // Handle grid configuration change
   const handleGridConfigChange = (config: Partial<GridConfig>) => {
-    setGridConfig((prev) => ({ ...prev, ...config }))
-  }
+    setGridConfig((prev) => ({ ...prev, ...config }));
+  };
 
   // Calculate grid classes based on configuration
   const gridClasses = `grid-container grid gap-${gridConfig.gap} grid-cols-1 sm:grid-cols-2 ${
@@ -100,7 +100,7 @@ export function Gallery({ initialFilter = "", itemsData }: GalleryProps) {
       : gridConfig.columns === 4
         ? "md:grid-cols-3 lg:grid-cols-4"
         : "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-  }`
+  }`;
 
   return (
     <div className="space-y-6">
@@ -126,5 +126,5 @@ export function Gallery({ initialFilter = "", itemsData }: GalleryProps) {
         </div>
       )}
     </div>
-  )
+  );
 }

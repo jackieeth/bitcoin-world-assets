@@ -1,18 +1,31 @@
-"use client"
+"use client";
 
-import type { GridConfig, SortOption } from "@/components/gallery"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Grid2X2, Grid3X3, LayoutGrid, ArrowDownNarrowWide, ArrowUpNarrowWide, AlignJustify } from "lucide-react"
+import type { GridConfig, SortOption } from "@/components/gallery";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Grid2X2,
+  Grid3X3,
+  LayoutGrid,
+  ArrowDownNarrowWide,
+  ArrowUpNarrowWide,
+  AlignJustify,
+} from "lucide-react";
 
 interface GalleryControlsProps {
-  categories: string[]
-  activeCategory: string
-  onCategoryChange: (category: string) => void
-  sortBy: SortOption
-  onSortChange: (option: SortOption) => void
-  gridConfig: GridConfig
-  onGridConfigChange: (config: Partial<GridConfig>) => void
+  categories: string[];
+  activeCategory: string;
+  onCategoryChange: (category: string) => void;
+  sortBy: SortOption;
+  onSortChange: (option: SortOption) => void;
+  gridConfig: GridConfig;
+  onGridConfigChange: (config: Partial<GridConfig>) => void;
 }
 
 export function GalleryControls({
@@ -101,7 +114,10 @@ export function GalleryControls({
           </Button>
         </div> */}
 
-        <Select value={sortBy} onValueChange={(value) => onSortChange(value as SortOption)}>
+        <Select
+          value={sortBy}
+          onValueChange={(value) => onSortChange(value as SortOption)}
+        >
           <SelectTrigger className="h-8 w-[130px] text-xs">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -125,5 +141,5 @@ export function GalleryControls({
         </Select>
       </div>
     </div>
-  )
+  );
 }

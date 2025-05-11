@@ -1,32 +1,34 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Ordiscan } from 'ordiscan';
-import { Gallery, Item } from "@/components/gallery"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Ordiscan } from "ordiscan";
+import { Gallery, Item } from "@/components/gallery";
 
 // Global cache for JSON content keyed by part
 const blockJsonCache = new Map<number, any>();
 
 interface LandingPageProps {
-  onSearch: (query: string) => void
+  onSearch: (query: string) => void;
 }
 
 export function LandingPage({ onSearch }: LandingPageProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [rareSats, setRareSats] = useState<{ blockNumber: number; satStash: number; sattributes: string }[]>([])
-  const [loading, setLoading] = useState(false)
-  const [awaitGalleryItems, setAwaitGalleryItems] = useState<Item[]>([])
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [rareSats, setRareSats] = useState<
+    { blockNumber: number; satStash: number; sattributes: string }[]
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [awaitGalleryItems, setAwaitGalleryItems] = useState<Item[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus the input field when the component mounts
   useEffect(() => {
     if (inputRef.current) {
-      inputRef.current.focus()
+      inputRef.current.focus();
     }
-  }, [])
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,26 +37,26 @@ export function LandingPage({ onSearch }: LandingPageProps) {
 
     // Only navigate for non-BTC address searches.
     if (!trimmedQuery.startsWith("bc1")) {
-        onSearch(trimmedQuery);
+      onSearch(trimmedQuery);
     }
     // If the query is a BTC address, we don't call onSearch,
     // so the Gallery component will display the fetched rare sats.
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setSearchQuery(suggestion)
+    setSearchQuery(suggestion);
     // Use a small timeout to ensure the state updates before submitting
-    setTimeout(() => onSearch(suggestion), 10)
-  }
+    setTimeout(() => onSearch(suggestion), 10);
+  };
 
-  const satToBlock = (satNumber:number) => {
+  const satToBlock = (satNumber: number) => {
     const blockReward0 = 5000000000;
     const halvingInv = 210000;
     let epoch = 0;
-    const blockReward = (epoch:number) => {
+    const blockReward = (epoch: number) => {
       return blockReward0 / 2 ** epoch;
     };
-    const maxSatNumInEpoch = (epoch:number) => {
+    const maxSatNumInEpoch = (epoch: number) => {
       // inclusive ending
       let halvingYear = 2012;
       let maxSatNum = 0;
@@ -67,7 +69,7 @@ export function LandingPage({ onSearch }: LandingPageProps) {
     };
 
     // check the epoch
-    let maxEpochSat = 0; 
+    let maxEpochSat = 0;
     while (satNumber >= maxEpochSat) {
       epoch += 1;
       maxEpochSat = maxSatNumInEpoch(epoch);
@@ -79,42 +81,44 @@ export function LandingPage({ onSearch }: LandingPageProps) {
 
   // New handler for paste events
   const handlePaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pasteData = e.clipboardData.getData('Text').trim();
+    const pasteData = e.clipboardData.getData("Text").trim();
     // if (pasteData.startsWith("bc1")) { // basic validation for BTC address
-      // setSearchQuery(pasteData); // update the state with the pasted BTC address
-      setLoading(true)  // start loading immediately when BTC address is pasted
-      try {
-        const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
-        if (!apiKey) throw new Error("API key not provided");
-        const ordiscan = new Ordiscan(apiKey);
-        const response = await ordiscan.address.getRareSats({ address: pasteData });
-        const filtered = response.filter((item: any) =>
-          item.satributes.includes("UNCOMMON")
-        );
-        const SatBlocks = [];
-        for (const item of filtered) {
-          for (const satStash of item.ranges) {
-            const blockNumber = satToBlock(satStash[0]);
-            SatBlocks.push({
-              blockNumber: blockNumber,
-              satStash: satStash[0],
-              sattributes: item.satributes.join(" ")
-            });
-          }
+    // setSearchQuery(pasteData); // update the state with the pasted BTC address
+    setLoading(true); // start loading immediately when BTC address is pasted
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
+      if (!apiKey) throw new Error("API key not provided");
+      const ordiscan = new Ordiscan(apiKey);
+      const response = await ordiscan.address.getRareSats({
+        address: pasteData,
+      });
+      const filtered = response.filter((item: any) =>
+        item.satributes.includes("UNCOMMON"),
+      );
+      const SatBlocks = [];
+      for (const item of filtered) {
+        for (const satStash of item.ranges) {
+          const blockNumber = satToBlock(satStash[0]);
+          SatBlocks.push({
+            blockNumber: blockNumber,
+            satStash: satStash[0],
+            sattributes: item.satributes.join(" "),
+          });
         }
-        setRareSats(SatBlocks);
-        console.log(SatBlocks);
-      } catch (error) {
-        console.error(error);
-        setLoading(false)
       }
+      setRareSats(SatBlocks);
+      // console.log(SatBlocks);
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+    }
     // }
   };
 
   // Updated getBlockImage with caching support
   const getBlockImage = async (blockNumber: number) => {
     const part = Math.floor(blockNumber / 50000) * 50;
-    
+
     let data;
     if (blockJsonCache.has(part)) {
       data = blockJsonCache.get(part);
@@ -123,7 +127,7 @@ export function LandingPage({ onSearch }: LandingPageProps) {
       data = await response.json();
       blockJsonCache.set(part, data);
     }
-    
+
     const inscriptionId = data[`${blockNumber}`];
     if (!inscriptionId) {
       return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQABAwGq9NAAAAAASUVORK5CYII=`; // Placeholder image
@@ -145,14 +149,14 @@ export function LandingPage({ onSearch }: LandingPageProps) {
             image: await getBlockImage(Number(sat.blockNumber)),
             sat: Number(sat.satStash),
             date: new Date().toISOString(),
-          }))
+          })),
         );
         setAwaitGalleryItems(items);
       } catch (error) {
         console.error("Error resolving gallery items:", error);
         setAwaitGalleryItems([]);
       } finally {
-        setLoading(false) // stop loading when items have been processed
+        setLoading(false); // stop loading when items have been processed
       }
     };
 
@@ -162,10 +166,16 @@ export function LandingPage({ onSearch }: LandingPageProps) {
   return (
     <div className="mt-3 landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <div className="max-w-5xl space-y-8 transition-all duration-500">
-        <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">BITCOIN WORLD ASSETS</h1>
+        <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">
+          BITCOIN WORLD ASSETS
+        </h1>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          DIGITAL ASSETS on BTC BLOCKS<br/>
-          Bitcoin blocks were never empty—they were canvases waiting for eyes. By elevating ordinals, inscriptions, and rare sats from collectibles to building blocks, we transform historical data into perpetual terrain, art, and story.
+          DIGITAL ASSETS on BTC BLOCKS
+          <br />
+          Bitcoin blocks were never empty—they were canvases waiting for eyes.
+          By elevating ordinals, inscriptions, and rare sats from collectibles
+          to building blocks, we transform historical data into perpetual
+          terrain, art, and story.
         </p>
 
         <form className="mx-auto flex w-full max-w-lg items-center space-x-2">
@@ -211,11 +221,9 @@ export function LandingPage({ onSearch }: LandingPageProps) {
             </svg>
           </div>
         ) : (
-          rareSats.length > 0 && (
-            <Gallery itemsData={awaitGalleryItems} />
-          )
+          rareSats.length > 0 && <Gallery itemsData={awaitGalleryItems} />
         )}
       </div>
     </div>
-  )
+  );
 }
