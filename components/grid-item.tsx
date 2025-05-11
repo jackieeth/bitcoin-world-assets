@@ -16,7 +16,7 @@ export function GridItem({ item }: GridItemProps) {
           alt={item.title}
           width={500}
           height={500}
-          className="h-full w-full object-cover grayscale transition-all duration-300 group-hover:scale-105"
+          className="p-2 h-full w-full object-cover grayscale transition-all duration-300 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent " />
         <div className="absolute bottom-0 left-0 right-0 p-4 ">
