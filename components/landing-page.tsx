@@ -170,12 +170,10 @@ export function LandingPage({ onSearch }: LandingPageProps) {
           BITCOIN WORLD ASSETS
         </h1>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          DIGITAL ASSETS on BTC BLOCKS
-          <br />
-          Bitcoin blocks were never empty—they were canvases waiting for eyes.
-          By elevating ordinals, inscriptions, and rare sats from collectibles
-          to building blocks, we transform historical data into perpetual
-          terrain, art, and story.
+          DIGITAL REAL ESTATE on the 1st Satoshi (Uncommon Sats) of BTC BLOCKS
+          <br /><br />
+          Bitcoin blocks are digital real estates.
+          By elevating ordinals, inscriptions, and rare sats, we transform immutable data into perpetual terrain, art, and story.
         </p>
 
         <form className="mx-auto flex w-full max-w-lg items-center space-x-2">
@@ -186,7 +184,7 @@ export function LandingPage({ onSearch }: LandingPageProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onPaste={handlePaste} // attach new onPaste handler
-              placeholder="Paste a BTC wallet...bc1"
+              placeholder="Paste a BTC/Ordinal Wallet Address"
               className="h-12 w-full rounded-md border border-white/10 bg-black/40 px-4 pl-10 pr-4 text-white backdrop-blur-sm"
             />
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/50" />
