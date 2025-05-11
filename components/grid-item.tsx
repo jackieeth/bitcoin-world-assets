@@ -7,11 +7,13 @@ interface GridItemProps {
 }
 
 export function GridItem({ item }: GridItemProps) {
+  const inscriptionId="";
+  const fullImgUri = `https://bitmap-img.magiceden.dev/v1/${inscriptionId}`
   return (
     <div className="grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/30">
       <Link href={`#item-${item.id}`} className="block aspect-square">
         <Image
-          src={item.image || "/placeholder.svg"}
+          src={fullImgUri}
           alt={item.title}
           width={500}
           height={500}

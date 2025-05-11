@@ -22,7 +22,7 @@ export type GridConfig = {
 }
 
 // Sort options
-export type SortOption = "newest" | "oldest" | "title"
+export type SortOption = "newest" | "oldest"// | "title"
 
 interface GalleryProps {
   initialFilter?: string
@@ -101,9 +101,9 @@ export function Gallery({ initialFilter = "" }: GalleryProps) {
       case "oldest":
         sorted.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         break
-      case "title":
-        sorted.sort((a, b) => a.title.localeCompare(b.title))
-        break
+      // case "title":
+      //   sorted.sort((a, b) => a.title.localeCompare(b.title))
+      //   break
     }
 
     setFilteredItems(sorted)

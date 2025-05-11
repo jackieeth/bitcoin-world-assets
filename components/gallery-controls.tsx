@@ -118,9 +118,9 @@ export function GalleryControls({
                 Oldest
               </div>
             </SelectItem>
-            <SelectItem value="title" className="text-xs">
+            {/* <SelectItem value="title" className="text-xs">
               <div className="flex items-center">A-Z</div>
-            </SelectItem>
+            </SelectItem> */}
           </SelectContent>
         </Select>
       </div>
