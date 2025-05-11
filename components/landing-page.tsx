@@ -151,7 +151,7 @@ export function LandingPage({ onSearch }: LandingPageProps) {
             date: new Date().toISOString(),
           })),
         );
-        setAwaitGalleryItems(items);
+        setAwaitGalleryItems(items.sort((a, b) => a.sat - b.sat));
       } catch (error) {
         console.error("Error resolving gallery items:", error);
         setAwaitGalleryItems([]);
@@ -170,10 +170,9 @@ export function LandingPage({ onSearch }: LandingPageProps) {
           BITCOIN WORLD ASSETS
         </h1>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          DIGITAL REAL ESTATE on the 1st Satoshi (Uncommon Sats) of BTC BLOCKS
-          <br /><br />
-          Bitcoin blocks are digital real estates.
-          By elevating ordinals, inscriptions, and rare sats, we transform immutable data into perpetual terrain, art, and story.
+          Check a BTC/Ord address for DIGITAL REAL ESTATES
+          <br /><br /><small>
+          Blocks of Bitcoin are the durable foundation of digital worlds. Each BTC block sealed digital assets such as BTC transactions, Ordinal inscriptions, and rare sats. DIGITAL REAL ESTATES are located on the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS.</small>
         </p>
 
         <form className="mx-auto flex w-full max-w-lg items-center space-x-2">

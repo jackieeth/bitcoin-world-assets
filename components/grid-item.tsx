@@ -25,7 +25,7 @@ export function GridItem({ item }: GridItemProps) {
           <p className="mt-1 text-xs text-white/70">
             {item.description}
             <br />
-            <small>{item.sat}</small>
+            <small>SAT #{item.sat}</small>
           </p>
         </div>
       </Link>
