@@ -75,10 +75,10 @@ export function Gallery({ initialFilter = "", itemsData }: GalleryProps) {
 
     switch (option) {
       case "newest":
-        sorted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        sorted.sort((a, b) => b.sat - a.sat)
         break
       case "oldest":
-        sorted.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        sorted.sort((a, b) => a.sat - b.sat)
         break
       // case "title":
       //   sorted.sort((a, b) => a.title.localeCompare(b.title))
