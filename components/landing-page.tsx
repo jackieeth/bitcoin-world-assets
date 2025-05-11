@@ -17,6 +17,8 @@ interface LandingPageProps {
 export function LandingPage({ onSearch }: LandingPageProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [rareSats, setRareSats] = useState<{ blockNumber: number; satStash: number; sattributes: string }[]>([])
+  const [loading, setLoading] = useState(false)
+  const [awaitGalleryItems, setAwaitGalleryItems] = useState<Item[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Focus the input field when the component mounts
@@ -37,7 +39,7 @@ export function LandingPage({ onSearch }: LandingPageProps) {
     }
     // If the query is a BTC address, we don't call onSearch,
     // so the Gallery component will display the fetched rare sats.
-};
+  };
 
   const handleSuggestionClick = (suggestion: string) => {
     setSearchQuery(suggestion)
@@ -46,41 +48,41 @@ export function LandingPage({ onSearch }: LandingPageProps) {
   }
 
   const satToBlock = (satNumber:number) => {
+    const blockReward0 = 5000000000;
+    const halvingInv = 210000;
+    let epoch = 0;
+    const blockReward = (epoch:number) => {
+      return blockReward0 / 2 ** epoch;
+    };
+    const maxSatNumInEpoch = (epoch:number) => {
+      // inclusive ending
+      let halvingYear = 2012;
+      let maxSatNum = 0;
+      for (let index = 0; index < epoch; index++) {
+        const reward = blockReward(index);
+        maxSatNum += reward * halvingInv;
+        halvingYear += 4;
+      }
+      return maxSatNum;
+    };
 
-  const blockReward0 = 5000000000;
-  const halvingInv = 210000;
-  let epoch = 0;
-  const blockReward = (epoch:number) => {
-    return blockReward0 / 2 ** epoch;
-  };
-  const maxSatNumInEpoch = (epoch:number) => {
-    // inclusive ending
-    let halvingYear = 2012;
-    let maxSatNum = 0;
-    for (let index = 0; index < epoch; index++) {
-      const reward = blockReward(index);
-      maxSatNum += reward * halvingInv;
-      halvingYear += 4;
+    // check the epoch
+    let maxEpochSat = 0; 
+    while (satNumber >= maxEpochSat) {
+      epoch += 1;
+      maxEpochSat = maxSatNumInEpoch(epoch);
     }
-    return maxSatNum;
+    const targetBlockOffset =
+      (satNumber - maxSatNumInEpoch(epoch - 1)) / blockReward(epoch - 1);
+    return Number(halvingInv * (epoch - 1) + targetBlockOffset);
   };
-
-  // check the epoch
-  let maxEpochSat = 0; //maxSatNumInEpoch(epoch);
-  while (satNumber >= maxEpochSat) {
-    epoch += 1;
-    maxEpochSat = maxSatNumInEpoch(epoch);
-  }
-  const targetBlockOffset =
-    (satNumber - maxSatNumInEpoch(epoch - 1)) / blockReward(epoch - 1);
-  return Number(halvingInv * (epoch - 1) + targetBlockOffset);
-};
 
   // New handler for paste events
   const handlePaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
     const pasteData = e.clipboardData.getData('Text').trim();
-    if (pasteData.startsWith("bc1")) { // basic validation for BTC address
-      setSearchQuery(pasteData); // update the state with the pasted BTC address
+    // if (pasteData.startsWith("bc1")) { // basic validation for BTC address
+      // setSearchQuery(pasteData); // update the state with the pasted BTC address
+      setLoading(true)  // start loading immediately when BTC address is pasted
       try {
         const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
         if (!apiKey) throw new Error("API key not provided");
@@ -104,8 +106,9 @@ export function LandingPage({ onSearch }: LandingPageProps) {
         console.log(SatBlocks);
       } catch (error) {
         console.error(error);
+        setLoading(false)
       }
-    }
+    // }
   };
 
   // Updated getBlockImage with caching support
@@ -129,10 +132,9 @@ export function LandingPage({ onSearch }: LandingPageProps) {
   };
 
   // Transform rareSats into the Item type
-  const [awaitGalleryItems, setAwaitGalleryItems] = useState<Item[]>([]);
-
   useEffect(() => {
     const fetchGalleryItems = async () => {
+      if (rareSats.length === 0) return;
       try {
         const items = await Promise.all(
           rareSats.map(async (sat, index) => ({
@@ -149,6 +151,8 @@ export function LandingPage({ onSearch }: LandingPageProps) {
       } catch (error) {
         console.error("Error resolving gallery items:", error);
         setAwaitGalleryItems([]);
+      } finally {
+        setLoading(false) // stop loading when items have been processed
       }
     };
 
@@ -156,15 +160,15 @@ export function LandingPage({ onSearch }: LandingPageProps) {
   }, [rareSats]);
 
   return (
-    <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      <div className="max-w-3xl space-y-8 transition-all duration-500">
+    <div className="mt-3 landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
+      <div className="max-w-5xl space-y-8 transition-all duration-500">
         <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">BITCOIN WORLD ASSETS</h1>
-        <p className="mx-auto max-w-[700px] text-m text-white/70 md:text-l">
+        <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
           DIGITAL ASSETS on BTC BLOCKS<br/>
           Bitcoin blocks were never empty—they were canvases waiting for eyes. By elevating ordinals, inscriptions, and rare sats from collectibles to building blocks, we transform historical data into perpetual terrain, art, and story.
         </p>
 
-        <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-lg items-center space-x-2">
+        <form className="mx-auto flex w-full max-w-lg items-center space-x-2">
           <div className="relative flex-1">
             <input
               ref={inputRef}
@@ -172,32 +176,44 @@ export function LandingPage({ onSearch }: LandingPageProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onPaste={handlePaste} // attach new onPaste handler
-              placeholder="Enter a BTC wallet...bc1p"
+              placeholder="Paste a BTC wallet...bc1"
               className="h-12 w-full rounded-md border border-white/10 bg-black/40 px-4 pl-10 pr-4 text-white backdrop-blur-sm"
             />
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/50" />
           </div>
-          <Button type="submit" disabled={!searchQuery.trim()} className="h-12 px-6">
+          {/* <Button type="submit" disabled={!searchQuery.trim()} className="h-12 px-6">
             Submit
-          </Button>
+          </Button> */}
         </form>
 
-        {/* <div className="flex flex-wrap justify-center gap-2 text-sm text-white/50">
-        {rareSats.length > 0 && (
-          <Gallery
-            itemsData={awaitGalleryItems}
-          />
-        )}
-              {suggestion}
-            </button>
-          ))}
-        </div> */}
-
-        {/* Pass the transformed data to the Gallery component */}
-        {rareSats.length > 0 && (
-          <Gallery
-            itemsData={awaitGalleryItems}
-          />
+        {/* Show loading spinner if fetching data; otherwise display the Gallery */}
+        {loading ? (
+          <div className="flex justify-center items-center">
+            <svg
+              className="animate-spin h-8 w-8 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              ></path>
+            </svg>
+          </div>
+        ) : (
+          rareSats.length > 0 && (
+            <Gallery itemsData={awaitGalleryItems} />
+          )
         )}
       </div>
     </div>
