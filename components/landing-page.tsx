@@ -1,11 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Ordiscan } from 'ordiscan';
+import { Gallery, Item } from "@/components/gallery"
+
+// Global cache for JSON content keyed by part
+const blockJsonCache = new Map<number, any>();
 
 interface LandingPageProps {
   onSearch: (query: string) => void
@@ -24,11 +27,17 @@ export function LandingPage({ onSearch }: LandingPageProps) {
   }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      onSearch(searchQuery)
+    e.preventDefault();
+    const trimmedQuery = searchQuery.trim();
+    if (!trimmedQuery) return;
+
+    // Only navigate for non-BTC address searches.
+    if (!trimmedQuery.startsWith("bc1")) {
+        onSearch(trimmedQuery);
     }
-  }
+    // If the query is a BTC address, we don't call onSearch,
+    // so the Gallery component will display the fetched rare sats.
+};
 
   const handleSuggestionClick = (suggestion: string) => {
     setSearchQuery(suggestion)
@@ -71,7 +80,7 @@ export function LandingPage({ onSearch }: LandingPageProps) {
   const handlePaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
     const pasteData = e.clipboardData.getData('Text').trim();
     if (pasteData.startsWith("bc1")) { // basic validation for BTC address
-      setSearchQuery(pasteData);
+      setSearchQuery(pasteData); // update the state with the pasted BTC address
       try {
         const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
         if (!apiKey) throw new Error("API key not provided");
@@ -80,12 +89,10 @@ export function LandingPage({ onSearch }: LandingPageProps) {
         const filtered = response.filter((item: any) =>
           item.satributes.includes("UNCOMMON")
         );
-        // console.log(filtered);
-        const SatBlocks = []
+        const SatBlocks = [];
         for (const item of filtered) {
           for (const satStash of item.ranges) {
             const blockNumber = satToBlock(satStash[0]);
-            // console.log(blockNumber, satStash[0], item.satributes.join(" "));
             SatBlocks.push({
               blockNumber: blockNumber,
               satStash: satStash[0],
@@ -100,6 +107,53 @@ export function LandingPage({ onSearch }: LandingPageProps) {
       }
     }
   };
+
+  // Updated getBlockImage with caching support
+  const getBlockImage = async (blockNumber: number) => {
+    const part = Math.floor(blockNumber / 50000) * 50;
+    
+    let data;
+    if (blockJsonCache.has(part)) {
+      data = blockJsonCache.get(part);
+    } else {
+      const response = await fetch(`/content/blocks_${part}k.json`);
+      data = await response.json();
+      blockJsonCache.set(part, data);
+    }
+    
+    const inscriptionId = data[`${blockNumber}`];
+    if (!inscriptionId) {
+      return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQABAwGq9NAAAAAASUVORK5CYII=`; // Placeholder image
+    }
+    return `https://bitmap-img.magiceden.dev/v1/${inscriptionId}`;
+  };
+
+  // Transform rareSats into the Item type
+  const [awaitGalleryItems, setAwaitGalleryItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    const fetchGalleryItems = async () => {
+      try {
+        const items = await Promise.all(
+          rareSats.map(async (sat, index) => ({
+            id: index,
+            title: `Block ${sat.blockNumber}`,
+            description: `${sat.sattributes}`,
+            category: "rare-sats",
+            image: await getBlockImage(Number(sat.blockNumber)),
+            sat: Number(sat.satStash),
+            date: new Date().toISOString(),
+          }))
+        );
+        setAwaitGalleryItems(items);
+      } catch (error) {
+        console.error("Error resolving gallery items:", error);
+        setAwaitGalleryItems([]);
+      }
+    };
+
+    fetchGalleryItems();
+  }, [rareSats]);
 
   return (
     <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
@@ -124,25 +178,27 @@ export function LandingPage({ onSearch }: LandingPageProps) {
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/50" />
           </div>
           <Button type="submit" disabled={!searchQuery.trim()} className="h-12 px-6">
-            Explore
+            Submit
           </Button>
         </form>
 
-        <div className="flex flex-wrap justify-center gap-2 text-sm text-white/50">
-          <span>Try:</span>
-          {["architecture", "nature", "urban", "abstract", "portrait"].map((suggestion) => (
-            <button
-              key={suggestion}
-              type="button"
-              onClick={() => handleSuggestionClick(suggestion)}
-              className="hover:text-white focus:text-white focus:outline-none"
-            >
+        {/* <div className="flex flex-wrap justify-center gap-2 text-sm text-white/50">
+        {rareSats.length > 0 && (
+          <Gallery
+            itemsData={awaitGalleryItems}
+          />
+        )}
               {suggestion}
             </button>
           ))}
-        </div>
+        </div> */}
 
-        
+        {/* Pass the transformed data to the Gallery component */}
+        {rareSats.length > 0 && (
+          <Gallery
+            itemsData={awaitGalleryItems}
+          />
+        )}
       </div>
     </div>
   )

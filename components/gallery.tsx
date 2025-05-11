@@ -13,6 +13,7 @@ export type Item = {
   category: string
   image: string
   date: string
+  sat: number
 }
 
 // Grid configuration options
@@ -26,9 +27,10 @@ export type SortOption = "newest" | "oldest"// | "title"
 
 interface GalleryProps {
   initialFilter?: string
+  itemsData: Item[] // Add this prop to accept external data
 }
 
-export function Gallery({ initialFilter = "" }: GalleryProps) {
+export function Gallery({ initialFilter = "", itemsData }: GalleryProps) {
   // State for items and filtered items
   const [items, setItems] = useState<Item[]>([])
   const [filteredItems, setFilteredItems] = useState<Item[]>([])
@@ -39,43 +41,20 @@ export function Gallery({ initialFilter = "" }: GalleryProps) {
 
   // State for grid configuration
   const [gridConfig, setGridConfig] = useState<GridConfig>({
-    columns: 4,
-    gap: 1,
+    columns: 6,
+    gap: 2,
   })
 
-  // Load items on mount and when initialFilter changes
+  // Load items from props on mount
   useEffect(() => {
-    const data = generateItems(798)
-    setItems(data)
-
-    // Apply initial filter if provided
-    if (initialFilter && initialFilter !== "all") {
-      const filtered = data.filter(
-        (item) =>
-          item.category.toLowerCase().includes(initialFilter.toLowerCase()) ||
-          item.title.toLowerCase().includes(initialFilter.toLowerCase()) ||
-          item.description.toLowerCase().includes(initialFilter.toLowerCase()),
-      )
-      setFilteredItems(filtered)
-
-      // If the filter matches a category exactly, set it as active
-      const matchingCategory = data.find(
-        (item) => item.category.toLowerCase() === initialFilter.toLowerCase(),
-      )?.category
-
-      if (matchingCategory) {
-        setActiveCategory(matchingCategory)
-      } else {
-        setActiveCategory("all")
-      }
-    } else {
-      setFilteredItems(data)
-      setActiveCategory("all")
-    }
-  }, [initialFilter])
+    setItems(itemsData)
+    setFilteredItems(itemsData) // display all items without filtering
+    setActiveCategory("all")
+  }, [itemsData])
 
   // Get unique categories from items
-  const categories = ["all", ...Array.from(new Set(items.map((item) => item.category)))]
+  // const categories = ["all", ...Array.from(new Set(items.map((item) => item.category)))]
+  const categories = ["all", "rare-sats", "uncommon-sats", "common-sats"]
 
   // Handle category filter change
   const handleCategoryChange = (category: string) => {
@@ -125,7 +104,7 @@ export function Gallery({ initialFilter = "" }: GalleryProps) {
 
   return (
     <div className="space-y-6">
-      <GalleryControls
+      {/* <GalleryControls
         categories={categories}
         activeCategory={activeCategory}
         onCategoryChange={handleCategoryChange}
@@ -133,7 +112,7 @@ export function Gallery({ initialFilter = "" }: GalleryProps) {
         onSortChange={handleSortChange}
         gridConfig={gridConfig}
         onGridConfigChange={handleGridConfigChange}
-      />
+      /> */}
 
       {filteredItems.length === 0 ? (
         <div className="flex h-40 items-center justify-center border border-white/10 text-white/60">
