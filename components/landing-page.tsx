@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Link, Search } from "lucide-react";
 import { Ordiscan } from "ordiscan";
 import { Gallery, Item } from "@/components/gallery";
 import btclogo from "../styles/bitcoin-logo.png";
@@ -177,14 +177,11 @@ export function LandingPage({
           </h1>
         </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          Check BITCOIN REAL ESTATES from a BTC/Ord address
+          Check BITCOIN REAL ESTATE from a BTC/Ord address
           <br />
           <br />
           <small>
-            Bitcoin World Assets (BWAs) are the foundation of digital worlds as
-            Bitcoin real estates natively born with each block of Bitcoin. BWAs
-            are located on the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS.
-            100% fair distribution. How many do you cryptographically own?
+            Bitcoin World Assets (BWAs) are digital real estate natively born with each block of Bitcoin (fair distribution to miners). BWAs are the foundation of durable digital world real estate that can be further built upon. BWAs are the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS because early miners used them for record-keeping. BWAs are on the market (e.g., <a style={{textDecoration:"underline"}} href={`https://magiceden.us/ordinals/marketplace/rare-sats`} target="_blank">Magic Eden</a>, <a style={{textDecoration:"underline"}} href={`https://magisat.io/category/uncommon`} target="_blank">Magisat</a>...) as Uncommon Sats. How many do you cryptographically own?
           </small>
         </p>
 
