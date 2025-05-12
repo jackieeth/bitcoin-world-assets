@@ -204,7 +204,7 @@ export function LandingPage({
         </form>
 
         {loading ? (
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center mb-4">
             <svg
               className="animate-spin h-8 w-8 text-white"
               xmlns="http://www.w3.org/2000/svg"
