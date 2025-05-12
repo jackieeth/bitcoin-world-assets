@@ -35,6 +35,9 @@ export const metadata: Metadata = {
     images: ["https://bitcoinworldassets.com/preview.jpg"],
   },
   generator: "qAI",
+  icons: {
+    icon: "/favicon-16x16.png", // path relative to the public folder
+  },
 }
 
 export default function RootLayout({
