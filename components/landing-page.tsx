@@ -185,7 +185,7 @@ export function LandingPage({
           </small>
         </p>
 
-        <form className="mx-auto flex w-full max-w-2xl items-center space-x-2">
+        <form className="mx-auto flex w-full max-w-3xl items-center space-x-2">
           <div className="relative flex-1">
             <input
               ref={inputRef}
