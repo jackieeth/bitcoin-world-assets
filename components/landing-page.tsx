@@ -178,9 +178,9 @@ export function LandingPage({ onSearch }: LandingPageProps) {
           </h1>
         </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          Check DIGITAL REAL ESTATES from a BTC/Ord address
+          Check BITCOIN REAL ESTATES from a BTC/Ord address
           <br /><br /><small>
-          Bitcoin World Assets (BWAs) are the foundation of digital worlds and digital real estates on blocks of Bitcoin. Each BTC block sealed digital assets such as BTC transactions, Ordinal inscriptions, and rare sats. BWAs are located on the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS. 100% fair distribution.</small>
+          Bitcoin World Assets (BWAs) are the foundation of digital worlds as Bitcoin real estates natively born with each block of Bitcoin. BWAs are located on the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS. 100% fair distribution. How many do you cryptographically own?</small>
         </p>
 
         <form className="mx-auto flex w-full max-w-2xl items-center space-x-2">

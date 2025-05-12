@@ -56,7 +56,7 @@ export default function Home() {
             <div className="mb-6 flex items-center">
               <h2 className="text-2xl font-bold">Results for "{searchQuery}"</h2>
             </div>
-            <Gallery initialFilter={searchQuery} />
+            <Gallery initialFilter={searchQuery} itemsData={[]} />
           </div>
         )}
       </div>
