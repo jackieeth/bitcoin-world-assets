@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation"; // <-- Import useRouter
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Ordiscan } from "ordiscan";
@@ -24,6 +25,7 @@ export function LandingPage({ onSearch, initialSearchQuery }: LandingPageProps) 
     const [loading, setLoading] = useState(false);
     const [awaitGalleryItems, setAwaitGalleryItems] = useState<Item[]>([]);
     const inputRef = useRef<HTMLInputElement>(null);
+    const router = useRouter(); // <-- initialize router
 
     // Focus the input field when the component mounts
     useEffect(() => {
@@ -40,7 +42,7 @@ export function LandingPage({ onSearch, initialSearchQuery }: LandingPageProps) 
                     getData: () => initialSearchQuery,
                 },
                 preventDefault: () => {},
-            } as React.ClipboardEvent<HTMLInputElement>;
+            } as unknown as React.ClipboardEvent<HTMLInputElement>;
             handlePaste(fakeEvent);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -94,10 +96,12 @@ export function LandingPage({ onSearch, initialSearchQuery }: LandingPageProps) 
         return Number(halvingInv * (epoch - 1) + targetBlockOffset);
     };
 
-    // New handler for paste events
+    // New handler for paste events with URL update
     const handlePaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
         const pasteData = e.clipboardData.getData("Text").trim();
         setSearchQuery(pasteData);
+        // Update the URL without a full refresh
+        window.history.replaceState(null, "", `/address/${pasteData}`);
         setLoading(true);
         try {
             const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
