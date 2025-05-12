@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Ordiscan } from "ordiscan";
 import { Gallery, Item } from "@/components/gallery";
+import btclogo from "../styles/bitcoin-logo.png";
 
 // Global cache for JSON content keyed by part
 const blockJsonCache = new Map<number, any>();
@@ -166,23 +167,30 @@ export function LandingPage({ onSearch }: LandingPageProps) {
   return (
     <div className="mt-3 landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <div className="max-w-5xl space-y-8 transition-all duration-500">
-        <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">
-          BITCOIN WORLD ASSETS
-        </h1>
+        <div className="flex items-center justify-center">
+          <img
+            src={btclogo.src}
+            alt="Bitcoin Logo"
+            className="w-12 h-12 mr-2" // adjust size and spacing as needed
+          />
+          <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">
+            BITCOIN WORLD ASSETS
+          </h1>
+        </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          Check a BTC/Ord address for DIGITAL REAL ESTATES
+          Check DIGITAL REAL ESTATES from a BTC/Ord address
           <br /><br /><small>
-          Blocks of Bitcoin are the durable foundation of digital worlds. Each BTC block sealed digital assets such as BTC transactions, Ordinal inscriptions, and rare sats. DIGITAL REAL ESTATES are located on the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS.</small>
+          Bitcoin World Assets (BWAs) are the foundation of digital worlds and digital real estates on blocks of Bitcoin. Each BTC block sealed digital assets such as BTC transactions, Ordinal inscriptions, and rare sats. BWAs are located on the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS. 100% fair distribution.</small>
         </p>
 
-        <form className="mx-auto flex w-full max-w-lg items-center space-x-2">
+        <form className="mx-auto flex w-full max-w-2xl items-center space-x-2">
           <div className="relative flex-1">
             <input
               ref={inputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onPaste={handlePaste} // attach new onPaste handler
+              onPaste={handlePaste}
               placeholder="Paste a BTC/Ordinal Wallet Address"
               className="h-12 w-full rounded-md border border-white/10 bg-black/40 px-4 pl-10 pr-4 text-white backdrop-blur-sm"
             />
