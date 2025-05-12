@@ -14,7 +14,27 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "BITCOIN WORLD ASSETS",
   description: "Build Digital Worlds on Bitcoin Blocks",
-    generator: 'qAI',
+  openGraph: {
+    title: "BITCOIN WORLD ASSETS",
+    description: "Build Digital Worlds on Bitcoin Blocks",
+    url: "https://bitcoinworldassets.com", // update with your domain
+    images: [
+      {
+        url: "https://bitcoinworldassets.com/preview.jpg", // add the preview image URL
+        width: 1200,
+        height: 630,
+      },
+    ],
+    siteName: "Bitcoin World Assets",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BITCOIN WORLD ASSETS",
+    description: "Build Digital Worlds on Bitcoin Blocks",
+    images: ["https://bitcoinworldassets.com/preview.jpg"],
+  },
+  generator: "qAI",
 }
 
 export default function RootLayout({
