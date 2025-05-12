@@ -9,7 +9,7 @@ interface GridItemProps {
 export function GridItem({ item }: GridItemProps) {
   return (
     <div className="grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/30">
-      <Link href={`#item-${item.id}`} className="block aspect-square">
+      <Link href={`https://ordiscan.com/sat/${item.sat}`} className="block aspect-square">
         <Image
           src={item.image}
           alt={item.title}
