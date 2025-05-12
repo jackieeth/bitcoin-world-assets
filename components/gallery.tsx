@@ -96,7 +96,7 @@ export function Gallery({ initialFilter = "", itemsData }: GalleryProps) {
   };
 
   // Calculate grid classes based on configuration
-  const gridClasses = `grid-container grid gap-${gridConfig.gap} grid-cols-1 sm:grid-cols-2 ${
+  const gridClasses = `grid-container grid gap-${gridConfig.gap} grid-cols-2 sm:grid-cols-2 ${
     gridConfig.columns === 3
       ? "md:grid-cols-3"
       : gridConfig.columns === 4

@@ -27,6 +27,7 @@ export function LandingPage({
   const [awaitGalleryItems, setAwaitGalleryItems] = useState<Item[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const isPastingRef = useRef(false);
+  const hasSearchedRef = useRef(false); // guard for initial paste handling
 
   // Focus the input field when the component mounts
   useEffect(() => {
@@ -35,9 +36,10 @@ export function LandingPage({
     }
   }, []);
 
-  // If an initial address is provided, simulate paste handling on mount
+  // If an initial address is provided, simulate paste handling on mount only once
   useEffect(() => {
-    if (initialSearchQuery) {
+    if (initialSearchQuery && !hasSearchedRef.current) {
+      hasSearchedRef.current = true;
       const fakeEvent = {
         clipboardData: {
           getData: () => initialSearchQuery,
@@ -87,7 +89,9 @@ export function LandingPage({
 
     e.preventDefault();
     const pasteData = e.clipboardData.getData("Text").trim();
-    if (pasteData === searchQuery) {
+
+    // Only prevent duplicate call if it's a user-initiated paste
+    if ((e as any).isTrusted && pasteData === searchQuery) {
       isPastingRef.current = false;
       return; // Prevent duplicate calls
     }
