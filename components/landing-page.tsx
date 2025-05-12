@@ -81,9 +81,11 @@ export function LandingPage({
 
   // New handler for paste events with URL update
   const handlePaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
     const pasteData = e.clipboardData.getData("Text").trim();
+    if (pasteData === searchQuery) return; // Prevent duplicate calls
+
     setSearchQuery(pasteData);
-    // Update the URL without a full refresh
     window.history.replaceState(null, "", `/address/${pasteData}`);
     setLoading(true);
     try {
