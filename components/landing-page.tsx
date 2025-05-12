@@ -145,6 +145,7 @@ export function LandingPage({
             title: `Block ${sat.blockNumber}`,
             description: `${sat.sattributes}`,
             category: "rare-sats",
+            block: sat.blockNumber,
             image: await getBlockImage(Number(sat.blockNumber)),
             sat: Number(sat.satStash),
             date: new Date().toISOString(),

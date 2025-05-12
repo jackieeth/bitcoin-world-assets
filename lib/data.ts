@@ -24,7 +24,9 @@ export function generateItems(count: number): Item[] {
       category,
       // Use a placeholder image service with grayscale filter
       image: `https://img-cdn.magiceden.dev/da:t/rs:fit:400:0:0/plain/https%3A%2F%2Frunescape.id%2Fparcel518357c%2F518357p${id}.png`,
-      date: id,
+      date: randomDate(),
+      sat: Math.floor(Math.random() * 1000000), // Example placeholder for 'sat'
+      block: 518357 // Example placeholder for 'block'
     }
   })
 }

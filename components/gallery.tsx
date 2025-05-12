@@ -14,6 +14,8 @@ export type Item = {
   image: string;
   date: string;
   sat: number;
+  block: number;
+  // ntx: number;
 };
 
 // Grid configuration options
