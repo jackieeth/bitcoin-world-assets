@@ -179,7 +179,7 @@ export function LandingPage({
           </h1>
         </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          Check BITCOIN REAL ESTATE from a BTC/Ord address
+          Check BITCOIN REAL ESTATE from a BTC address
           <br />
           <br />
           <small>
