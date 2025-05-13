@@ -59,6 +59,7 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.176.0",
     "vaul": "^0.9.6",
+    "xml-formatter": "^3.6.6",
     "zod": "^3.24.1"
   },
   "devDependencies": {

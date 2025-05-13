@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useParams } from "next/navigation";
+import { genBitFeedMml } from "../../../lib/gen-bitfeed";
 
 export default function BlockPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -184,10 +185,17 @@ export default function BlockPage() {
 
     // Parse and create the entire MML structure
     async function createMMLStructure(blockHeight: number) {
-      const mml = await fetch(
-        `https://quark20a.s3.us-west-1.amazonaws.com/q/${blockHeight}.xml`,
+      const defaultSize = 0.5;
+      const parcelColor = "#cccccc"; //"#f7931a";
+      const { mmlFile, blockWidth } = await genBitFeedMml(
+        blockHeight,
+        defaultSize,
+        parcelColor,
+        process.env.NEXT_PUBLIC_QUARK20_API_TXDATA_URL || "",
+        process.env.NEXT_PUBLIC_QUARK20_API_KEY || ""
       );
-      const xmlString = await mml.text();
+
+      const xmlString = mmlFile;
 
       // Parse the XML string
       const parser = new DOMParser();
@@ -228,10 +236,6 @@ export default function BlockPage() {
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
 
-      // Log the number of objects created
-      console.log(
-        "XML parsed successfully, created " + objects.length + " objects",
-      );
     }
 
     // Function to process XML nodes and create 3D objects
