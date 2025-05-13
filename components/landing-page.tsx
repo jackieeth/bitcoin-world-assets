@@ -6,9 +6,7 @@ import { Link, Search } from "lucide-react";
 import { Ordiscan } from "ordiscan";
 import { Gallery, Item } from "@/components/gallery";
 import btclogo from "../styles/bitcoin-logo.png";
-
-// Global cache for JSON content keyed by part
-const blockJsonCache = new Map<number, any>();
+import { getBlockImage } from "@/lib/gen-bitfeed";
 
 interface LandingPageProps {
   onSearch: (query: string) => void;
@@ -129,25 +127,7 @@ export function LandingPage({
     }
   };
 
-  // Updated getBlockImage with caching support
-  const getBlockImage = async (blockNumber: number) => {
-    const part = Math.floor(blockNumber / 50000) * 50;
-
-    let data;
-    if (blockJsonCache.has(part)) {
-      data = blockJsonCache.get(part);
-    } else {
-      const response = await fetch(`/content/blocks_${part}k.json`);
-      data = await response.json();
-      blockJsonCache.set(part, data);
-    }
-
-    const inscriptionId = data[`${blockNumber}`];
-    if (!inscriptionId) {
-      return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQABAwGq9NAAAAAASUVORK5CYII=`; // Placeholder image
-    }
-    return `${process.env.NEXT_PUBLIC_BLOCKIMAGE_URL}/${inscriptionId}`;
-  };
+  
 
   // Transform rareSats into the Item type
   useEffect(() => {
@@ -161,7 +141,10 @@ export function LandingPage({
             description: `${sat.sattributes}`,
             category: "rare-sats",
             block: sat.blockNumber,
-            image: await getBlockImage(Number(sat.blockNumber)),
+            image: await getBlockImage(
+              Number(sat.blockNumber),
+              process.env.NEXT_PUBLIC_BLOCKIMAGE_URL || ""
+            ),
             sat: Number(sat.satStash),
             date: new Date().toISOString(),
           })),

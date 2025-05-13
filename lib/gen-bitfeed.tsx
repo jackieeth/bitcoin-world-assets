@@ -1,6 +1,9 @@
 import format from "xml-formatter";
 import * as THREE from "three";
 
+// Global cache for JSON content keyed by part
+const blockJsonCache = new Map<number, any>();
+
 // Animation update function for models and shapes with animations
 // Extend the Object3D type to include the controller property
 declare module "three" {
@@ -10,6 +13,26 @@ declare module "three" {
     };
   }
 }
+
+// Updated getBlockImage with caching support
+export const getBlockImage = async (blockNumber: number, blockimgUri: string) => {
+    const part = Math.floor(blockNumber / 50000) * 50;
+
+    let data;
+    if (blockJsonCache.has(part)) {
+      data = blockJsonCache.get(part);
+    } else {
+      const response = await fetch(`/content/blocks_${part}k.json`);
+      data = await response.json();
+      blockJsonCache.set(part, data);
+    }
+
+    const inscriptionId = data[`${blockNumber}`];
+    if (!inscriptionId) {
+      return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQABAwGq9NAAAAAASUVORK5CYII=`; // Placeholder image
+    }
+    return `${blockimgUri}/${inscriptionId}`;
+  };
 
 export const updateAnimations = (objects: THREE.Object3D[], delta: number) => {
   objects.forEach((obj) => {

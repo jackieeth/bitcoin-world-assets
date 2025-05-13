@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useParams } from "next/navigation";
@@ -8,6 +8,7 @@ import {
   genBitFeedMml,
   processXMLNode,
   updateAnimations,
+  getBlockImage
 } from "../../../lib/gen-bitfeed";
 
 export default function BlockPage() {
@@ -15,6 +16,25 @@ export default function BlockPage() {
   const objectsRef = useRef<any[]>([]); // Initialize objectsRef as an empty array
   const params = useParams();
   const blockHeight = params.blockHeight;
+  const [blockImageUrl, setBlockImageUrl] = useState<string>("");
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  const Block1stSat = (blockHeight:number) => {
+    const blockReward0 = 5000000000;
+    const halvingInv = 210000;
+    
+    const blockReward = (epoch:number) => {
+      return blockReward0 / 2 ** epoch;
+    };
+
+    const epoch = Math.floor(blockHeight/halvingInv);
+    let satNumber = 0;
+    for (let index = 0; index < epoch; index++) {
+      satNumber += blockReward(index) * halvingInv;
+    }
+    satNumber += (blockHeight%halvingInv) * blockReward(epoch);
+    return satNumber;
+  }
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -183,6 +203,19 @@ export default function BlockPage() {
     };
   }, []);
 
+  useEffect(() => {
+    async function fetchBlockImage() {
+      if (blockHeight) {
+        const url = await getBlockImage(
+          Number(blockHeight),
+          process.env.NEXT_PUBLIC_BLOCKIMAGE_URL || ""
+        );
+        setBlockImageUrl(url);
+      }
+    }
+    fetchBlockImage();
+  }, [blockHeight]);
+
   return (
     <main className="relative max-w-screen max-h-screen bg-black text-white">
       <div ref={canvasRef} className="w-full h-screen" />
@@ -191,8 +224,15 @@ export default function BlockPage() {
         <span className="text-xs text-slate-400">Bitcoin World Asset</span><br/>
         {blockHeight ? `BLOCK ${blockHeight}` : "Loading BTC block..."}
         <br />
-        
-        <span className="text-xs">BTC block data visualized with <a style={{textDecoration: "underline"}} href={`https://bitfeed.live/block/height/${blockHeight}`}>BitFeed</a> in 3D</span>
+        <span className="text-xs text-slate-400">SAT #{Block1stSat(Number(blockHeight))}</span><br/>
+        <span className="text-xs">BTC block data <a style={{textDecoration: "underline"}} href={`https://bitfeed.live/block/height/${blockHeight}`}>visualized</a></span><br/>
+        {blockImageUrl && (
+          <img
+            src={blockImageUrl}
+            className={`w-24 h-24 mt-2 grayscale transition-opacity duration-700 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+            onLoad={() => setImgLoaded(true)}
+          />
+        )}
       </div>
     </main>
   );
