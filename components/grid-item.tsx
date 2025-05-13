@@ -10,7 +10,6 @@ export function GridItem({ item }: GridItemProps) {
   return (
     <div className="grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/30">
       <Link
-        // href={`https://bitfeed.live/block/height/${item.block}`}
         href={`/block/${item.block}`}
         className="block"
         target="_blank"

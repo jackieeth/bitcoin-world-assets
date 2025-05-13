@@ -186,10 +186,13 @@ export default function BlockPage() {
   return (
     <main className="relative max-w-screen max-h-screen bg-black text-white">
       <div ref={canvasRef} className="w-full h-screen" />
+      
       <div className="absolute top-4 left-4 text-xl">
+        <span className="text-xs text-slate-400">Bitcoin World Asset</span><br/>
         {blockHeight ? `BLOCK ${blockHeight}` : "Loading BTC block..."}
         <br />
-        <span className="text-sm">Bitcoin World Asset</span>
+        
+        <span className="text-xs">BTC block data visualized with <a style={{textDecoration: "underline"}} href={`https://bitfeed.live/block/height/${blockHeight}`}>BitFeed</a> in 3D</span>
       </div>
     </main>
   );

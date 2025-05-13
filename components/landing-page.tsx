@@ -192,11 +192,11 @@ export function LandingPage({
           </h1>
         </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          SECURE, IMMUTABLE, DIGITAL REAL ESTATE
+          IMMUTABLE DIGITAL WORLD REAL ESTATE
           <br />
           <br />
           <small>
-            Bitcoin World Assets (BWAs) are digital real estate natively born with each block of Bitcoin (fair distribution to miners). BWAs are the foundation of durable digital worlds that can be further built upon via BTC Ordinal inscriptions. BWAs are the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS. Early miners used the 1st sats to represent BTC blocks for record-keeping. BWAs can be found as Uncommon Sats at marketplaces (e.g.,{" "}
+            Bitcoin World Assets (BWAs) are digital real estate natively born with each block of Bitcoin (fair distribution to miners). BWAs are the foundation of durable digital worlds that can be further built using BTC Ordinal inscriptions. BWAs are the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS based on a tradition that early BTC miners used the 1st sats to represent BTC blocks for record-keeping. BWAs can be found as "Uncommon Sats" at marketplaces (e.g.,{" "}
             <a
               style={{ textDecoration: "underline" }}
               href={`https://magiceden.us/ordinals/marketplace/rare-sats`}
