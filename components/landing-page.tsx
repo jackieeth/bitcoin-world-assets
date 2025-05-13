@@ -196,7 +196,7 @@ export function LandingPage({
           <br />
           <br />
           <small>
-            Bitcoin World Assets (BWAs) are digital real estate natively born with each block of Bitcoin (fair distribution to miners). BWAs are the foundation of durable digital world real estate that can be further built upon via BTC Ordinal inscriptions. BWAs are the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS because early miners used them for record-keeping. BWAs are available on marketplaces (e.g.,{" "}
+            Bitcoin World Assets (BWAs) are digital real estate natively born with each block of Bitcoin (fair distribution to miners). BWAs are the foundation of durable digital worlds that can be further built upon via BTC Ordinal inscriptions. BWAs are the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS. Early miners used the 1st sats to represent BTC blocks for record-keeping. BWAs can be found as Uncommon Sats at marketplaces (e.g.,{" "}
             <a
               style={{ textDecoration: "underline" }}
               href={`https://magiceden.us/ordinals/marketplace/rare-sats`}
@@ -212,7 +212,7 @@ export function LandingPage({
             >
               Magisat
             </a>
-            ...) as Uncommon Sats. How many do you own?
+            ...). How many do you own?
           </small>
         </p>
 
