@@ -23,9 +23,11 @@ export function LandingPage({
   >([]);
   const [loading, setLoading] = useState(false);
   const [awaitGalleryItems, setAwaitGalleryItems] = useState<Item[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isPastingRef = useRef(false);
   const hasSearchedRef = useRef(false); // guard for initial paste handling
+  const [justPasted, setJustPasted] = useState(false);
 
   // Focus the input field when the component mounts
   useEffect(() => {
@@ -95,6 +97,7 @@ export function LandingPage({
     }
 
     setSearchQuery(pasteData);
+    setJustPasted(true);
     window.history.replaceState(null, "", `/address/${pasteData}`);
     setLoading(true);
     try {
@@ -104,6 +107,7 @@ export function LandingPage({
       const response = await ordiscan.address.getRareSats({
         address: pasteData,
       });
+
       const filtered = response.filter((item: any) =>
         item.satributes.includes("UNCOMMON"),
       );
@@ -119,15 +123,15 @@ export function LandingPage({
         }
       }
       setRareSats(SatBlocks);
-    } catch (error) {
+      setErrorMessage(null); // Clear error if successful
+    } catch (error: any) {
       console.error(error);
       setLoading(false);
+      setErrorMessage("Unable to process this BTC address");
     } finally {
       isPastingRef.current = false;
     }
   };
-
-  
 
   // Transform rareSats into the Item type
   useEffect(() => {
@@ -160,6 +164,14 @@ export function LandingPage({
 
     fetchGalleryItems();
   }, [rareSats]);
+
+  // Handler for input click
+  const handleInputClick = () => {
+    if (justPasted) {
+      setSearchQuery("");
+      setJustPasted(false);
+    }
+  };
 
   return (
     <div className="mt-3 landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
@@ -207,6 +219,7 @@ export function LandingPage({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onPaste={handlePaste}
+              onClick={handleInputClick}
               placeholder="Paste a BTC/Ordinal Wallet Address"
               className="h-12 w-full rounded-md border border-white/10 bg-black/40 px-4 pl-10 pr-4 text-white backdrop-blur-sm"
             />
@@ -239,6 +252,9 @@ export function LandingPage({
           </div>
         ) : (
           rareSats.length > 0 && <Gallery itemsData={awaitGalleryItems} />
+        )}
+        {errorMessage && (
+          <div className="text-red-500 mb-4">{errorMessage}</div>
         )}
       </div>
     </div>
