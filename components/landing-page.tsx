@@ -146,7 +146,7 @@ export function LandingPage({
     if (!inscriptionId) {
       return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQABAwGq9NAAAAAASUVORK5CYII=`; // Placeholder image
     }
-    return `https://bitmap-img.magiceden.dev/v1/${inscriptionId}`;
+    return `${process.env.NEXT_PUBLIC_BLOCKIMAGE_URL}/${inscriptionId}`;
   };
 
   // Transform rareSats into the Item type
@@ -192,7 +192,7 @@ export function LandingPage({
           </h1>
         </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          Check BITCOIN REAL ESTATE via BTC address
+          SECURE, IMMUTABLE, DIGITAL REAL ESTATE
           <br />
           <br />
           <small>
