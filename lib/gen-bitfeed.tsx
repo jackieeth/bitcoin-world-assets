@@ -1,4 +1,336 @@
 import format from "xml-formatter";
+import * as THREE from "three";
+
+// Animation update function for models and shapes with animations
+// Extend the Object3D type to include the controller property
+declare module "three" {
+  interface Object3D {
+    controller?: {
+      update?: (delta: number) => void;
+    };
+  }
+}
+
+export const updateAnimations = (objects: THREE.Object3D[], delta: number) => {
+  objects.forEach((obj) => {
+    if (obj.controller && typeof obj.controller.update === "function") {
+      obj.controller.update(delta);
+    }
+  });
+};
+
+// Extend the Mesh type to include attrAnimations and controller
+declare module "three" {
+  interface Mesh {
+    attrAnimations?: Array<{
+      attr: string;
+      start: number;
+      end: number;
+      startTime: number;
+      duration: number;
+      pingPong: boolean;
+      easing: string;
+    }>;
+    controller?: {
+      update?: (delta: number) => void;
+    };
+  }
+}
+
+// Function to process XML nodes and create 3D objects
+export function processXMLNode(node: any, parent: any) {
+  let objects: THREE.Object3D[] = [];
+  if (node.nodeName === "m-group") {
+    // Create a new group for m-group element
+    const group = new THREE.Group();
+
+    // Set position if specified
+    if (node.hasAttribute("x"))
+      group.position.x = parseFloat(node.getAttribute("x"));
+    if (node.hasAttribute("y"))
+      group.position.y = parseFloat(node.getAttribute("y"));
+    if (node.hasAttribute("z"))
+      group.position.z = parseFloat(node.getAttribute("z"));
+
+    // Set scale if specified
+    if (node.hasAttribute("sx"))
+      group.scale.x = parseFloat(node.getAttribute("sx"));
+    if (node.hasAttribute("sy"))
+      group.scale.y = parseFloat(node.getAttribute("sy"));
+    if (node.hasAttribute("sz"))
+      group.scale.z = parseFloat(node.getAttribute("sz"));
+
+    // Set rotation if specified (convert from degrees to radians)
+    if (node.hasAttribute("rx"))
+      group.rotation.x = THREE.MathUtils.degToRad(
+        parseFloat(node.getAttribute("rx")),
+      );
+    if (node.hasAttribute("ry"))
+      group.rotation.y = THREE.MathUtils.degToRad(
+        parseFloat(node.getAttribute("ry")),
+      );
+    if (node.hasAttribute("rz"))
+      group.rotation.z = THREE.MathUtils.degToRad(
+        parseFloat(node.getAttribute("rz")),
+      );
+
+    // Process children nodes and aggregate objects from children.
+    for (let i = 0; i < node.childNodes.length; i++) {
+      const childNode = node.childNodes[i];
+      if (childNode.nodeType === 1) {
+        const childObjects = processXMLNode(childNode, group);
+        objects = objects.concat(childObjects);
+      }
+    }
+    // Add group to parent and optionally push the group if needed.
+    parent.add(group);
+  } else if (node.nodeName === "m-cube") {
+    // Extract cube attributes
+    const cubeData: {
+      x: number;
+      y: number;
+      z: number;
+      width: number;
+      height: number;
+      depth: number;
+      color: any;
+      image?: {
+        src: string | null;
+        x: number;
+        y: number;
+        z: number;
+        width: number;
+      };
+    } = {
+      x: parseFloat(node.getAttribute("x") || 0),
+      y: parseFloat(node.getAttribute("y") || 0),
+      z: parseFloat(node.getAttribute("z") || 0),
+      width: parseFloat(node.getAttribute("width") || 1),
+      height: parseFloat(node.getAttribute("height") || 1),
+      depth: parseFloat(node.getAttribute("depth") || 1),
+      color: node.getAttribute("color") || "#ffffff",
+    };
+
+    // Check for image child
+    let hasImage = false;
+    let imageData = null;
+
+    for (let i = 0; i < node.childNodes.length; i++) {
+      const child = node.childNodes[i];
+      if (child.nodeType === 1 && child.nodeName === "m-image") {
+        // Element node
+        hasImage = true;
+        imageData = {
+          src: child.getAttribute("src"),
+          x: parseFloat(child.getAttribute("x") || 0),
+          y: parseFloat(child.getAttribute("y") || 0),
+          z: parseFloat(child.getAttribute("z") || 0),
+          width: parseFloat(child.getAttribute("width") || 1),
+        };
+        break;
+      }
+    }
+
+    // Create cube with or without image
+    let result;
+    if (hasImage) {
+      if (imageData) {
+        cubeData.image = imageData;
+      }
+      result = createCubeWithImage(cubeData);
+    } else {
+      result = createCube(cubeData);
+    }
+
+    // Process animation attributes from child elements
+    for (let i = 0; i < node.childNodes.length; i++) {
+      const child = node.childNodes[i];
+
+      // Check for m-attr-anim element
+      if (child.nodeType === 1 && child.nodeName === "m-attr-anim") {
+        // Store animation data
+        const animData = {
+          attr: child.getAttribute("attr"),
+          start: parseFloat(child.getAttribute("start") || 0),
+          end: parseFloat(child.getAttribute("end") || 0),
+          startTime: parseInt(child.getAttribute("start-time") || 0),
+          duration: parseInt(child.getAttribute("duration") || 1000),
+          pingPong: child.getAttribute("ping-pong") === "true",
+          easing: child.getAttribute("easing") || "linear",
+        };
+
+        // If this sphere has no animations array yet, create one
+        if (!result.attrAnimations) {
+          result.attrAnimations = [];
+        }
+
+        // Add this animation to the list
+        result.attrAnimations.push(animData);
+
+        // Create the animation
+        const clock = new THREE.Clock();
+        let elapsedTime = 0;
+        let animationStarted = false;
+
+        // Add controller if it doesn't exist
+        if (!result.controller) {
+          result.controller = {};
+        }
+
+        // Add update function to handle this animation
+        const originalUpdate = result.controller.update;
+        result.controller.update = (delta) => {
+          // Call the original update function if it exists
+          if (originalUpdate) {
+            originalUpdate(delta);
+          }
+
+          // Handle attribute animations
+          if (result.attrAnimations) {
+            elapsedTime += delta * 1000; // Convert to milliseconds
+
+            result.attrAnimations.forEach((anim) => {
+              // Only start animation after startTime has elapsed
+              if (elapsedTime >= anim.startTime) {
+                if (!animationStarted) {
+                  animationStarted = true;
+                  clock.start();
+                }
+
+                // Calculate progress
+                const animElapsed = elapsedTime - anim.startTime;
+                let progress = (animElapsed % anim.duration) / anim.duration;
+
+                // Handle ping-pong
+                if (
+                  anim.pingPong &&
+                  Math.floor(animElapsed / anim.duration) % 2 === 1
+                ) {
+                  progress = 1 - progress;
+                }
+
+                // Apply easing if specified
+                if (anim.easing === "easeInOutCubic") {
+                  progress =
+                    progress < 0.5
+                      ? 4 * progress ** 3
+                      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                }
+
+                // Calculate the current value
+                const value = anim.start + (anim.end - anim.start) * progress;
+
+                // Apply to the appropriate attribute
+                if (anim.attr === "x") result.position.x = value;
+                else if (anim.attr === "y") result.position.y = value;
+                else if (anim.attr === "z") result.position.z = value;
+                else if (anim.attr === "rx")
+                  result.rotation.x = THREE.MathUtils.degToRad(value);
+                else if (anim.attr === "ry")
+                  result.rotation.y = THREE.MathUtils.degToRad(value);
+                else if (anim.attr === "rz")
+                  result.rotation.z = THREE.MathUtils.degToRad(value);
+                else if (anim.attr === "sx") result.scale.x = value;
+                else if (anim.attr === "sy") result.scale.y = value;
+                else if (anim.attr === "sz") result.scale.z = value;
+              }
+            });
+          }
+        };
+      }
+    }
+
+    // Add cube to parent
+    parent.add(result);
+    objects.push(result);
+  }
+  return objects;
+}
+// Create a simple cube
+function createCube(data: any) {
+  const geometry = new THREE.BoxGeometry(data.width, data.height, data.depth);
+  const material = new THREE.MeshLambertMaterial({ color: data.color });
+  const cube = new THREE.Mesh(geometry, material);
+
+  // Position cube at its center
+  cube.position.set(data.x, data.y, data.z);
+
+  // Enable shadows
+  cube.castShadow = true;
+  cube.receiveShadow = true;
+
+  return cube;
+}
+
+// Create a cube with an image texture
+function createCubeWithImage(data: any) {
+  // Create base cube
+  const cube = createCube(data);
+
+  // Set up image plane
+  const planeGeometry = new THREE.PlaneGeometry(
+    data.image.width,
+    data.image.width,
+  );
+
+  // Create a texture loader
+  const textureLoader = new THREE.TextureLoader();
+
+  // Create a placeholder material until the texture loads
+  const planeMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    side: THREE.DoubleSide,
+    transparent: true,
+  });
+
+  const imagePlane = new THREE.Mesh(planeGeometry, planeMaterial);
+
+  // Position the image relative to the cube
+  imagePlane.position.set(
+    data.image.x,
+    data.image.y,
+    data.image.z + data.depth / 2 + 0.01,
+  );
+
+  // Enable shadows for image plane
+  imagePlane.castShadow = true;
+  imagePlane.receiveShadow = true;
+
+  // Add image plane to the cube
+  cube.add(imagePlane);
+
+  // Try to load the texture from the URL
+  try {
+    // Some URLs may not be accessible, so provide an error handler
+    textureLoader.load(
+      // URL
+      data.image.src,
+
+      // Success callback
+      function (texture) {
+        planeMaterial.map = texture;
+        planeMaterial.needsUpdate = true;
+        console.log("Texture loaded successfully from", data.image.src);
+      },
+
+      // Progress callback
+      undefined,
+
+      // Error callback
+      function (err) {
+        console.error("Error loading texture:", err);
+        planeMaterial.color.set(0xcccccc); // Gray fallback
+        planeMaterial.needsUpdate = true;
+      },
+    );
+  } catch (e) {
+    console.error("Exception when loading texture:", e);
+    planeMaterial.color.set(0xcccccc); // Gray fallback
+    planeMaterial.needsUpdate = true;
+  }
+
+  return cube;
+}
 
 function preventSelfClosingConversion(xmlString: string) {
   // First, process the XML as before (remove comments, fix attributes, etc.)
@@ -328,7 +660,7 @@ export const genBitFeedMml = async (
   size: number,
   parcelColor: string,
   uri: string,
-  apikey: string
+  apikey: string,
 ) => {
   if (!parcelColor) {
     parcelColor = "#f7931a";
@@ -337,14 +669,14 @@ export const genBitFeedMml = async (
     size = 0.5;
   }
   let txList = [];
-const payload = { "apikey": apikey, "blockHeight": blockHeight.toString() };
-const headers = { "Content-Type": "application/x-www-form-urlencoded" };
-const body = new URLSearchParams(payload).toString();
-const compressed = await fetch(uri, {
+  const payload = { apikey: apikey, blockHeight: blockHeight.toString() };
+  const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+  const body = new URLSearchParams(payload).toString();
+  const compressed = await fetch(uri, {
     method: "POST",
     headers: headers,
-    body: body
-}).then((d) => d.text());
+    body: body,
+  }).then((d) => d.text());
 
   if (compressed) {
     let lines = compressed.split(/\r?\n/);
@@ -379,7 +711,7 @@ const compressed = await fetch(uri, {
     const slot = mondrian.place(txList[i].size);
 
     if (slot) {
-      parcelsMML += `<m-cube id="parcel-${i}-size-${slot.r}" width="${slot.r * size * 0.9}" height="${platform_thickness * slot.r}" depth="${slot.r * size * 0.9}" x="${(slot.position.x + slot.r - blockWidth / 2) * size - margin * slot.r}" y="${(0.1 * slot.r) / 2}" z="${(slot.position.y + slot.r - blockWidth / 2) * size - margin * slot.r}" color="${parcelColor}">${Math.random() > 0.95 ? `<m-attr-anim attr="y" start="0.5" end="${0.5 + Math.floor(Math.random() * 10)}" start-time="2000" duration="${5000 + Math.floor(Math.random() * 5000)}" ping-pong="true" ping-pong-delay="1000"></m-attr-anim>`: ``} </m-cube>`;
+      parcelsMML += `<m-cube id="parcel-${i}-size-${slot.r}" width="${slot.r * size * 0.9}" height="${platform_thickness * slot.r}" depth="${slot.r * size * 0.9}" x="${(slot.position.x + slot.r - blockWidth / 2) * size - margin * slot.r}" y="${(0.1 * slot.r) / 2}" z="${(slot.position.y + slot.r - blockWidth / 2) * size - margin * slot.r}" color="${parcelColor}">${Math.random() > 0.95 ? `<m-attr-anim attr="y" start="0.5" end="${0.5 + Math.floor(Math.random() * 10)}" start-time="2000" duration="${5000 + Math.floor(Math.random() * 5000)}" ping-pong="true" ping-pong-delay="1000"></m-attr-anim>` : ``} </m-cube>`;
     }
   }
 
