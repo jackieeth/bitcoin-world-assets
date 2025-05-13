@@ -123,7 +123,12 @@ export function LandingPage({
         }
       }
       setRareSats(SatBlocks);
+      if (SatBlocks.length === 0) {
+        setLoading(false);
+      setErrorMessage("No BWAs found in this BTC address");
+      }else{
       setErrorMessage(null); // Clear error if successful
+    }
     } catch (error: any) {
       console.error(error);
       setLoading(false);
@@ -174,8 +179,8 @@ export function LandingPage({
   };
 
   return (
-    <div className="mt-3 landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      <div className="max-w-5xl space-y-8 transition-all duration-500">
+    <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
+      <div className="mt-4 max-w-5xl space-y-8 transition-all duration-500">
         <div className="flex items-center justify-center">
           <img
             src={btclogo.src}
@@ -254,7 +259,7 @@ export function LandingPage({
           rareSats.length > 0 && <Gallery itemsData={awaitGalleryItems} />
         )}
         {errorMessage && (
-          <div className="text-red-500 mb-4">{errorMessage}</div>
+          <div className="text-white-500 mb-4">{errorMessage}</div>
         )}
       </div>
     </div>
