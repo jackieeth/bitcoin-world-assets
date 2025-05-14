@@ -181,7 +181,7 @@ export function LandingPage({
 
   return (
     <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      <div className="mt-4 max-w-5xl space-y-6 transition-all duration-500">
+      <div className="mt-20 max-w-5xl space-y-6 transition-all duration-500">
         <div className="flex items-center justify-center">
           <img
             src={btclogo.src}
@@ -197,10 +197,8 @@ export function LandingPage({
           <br />
           <br />
           <small>
-            Bitcoin World Assets (BWAs) are digital real estate natively born
-            with each block of Bitcoin (fair distribution to miners). BWAs are
-            the foundation of durable digital worlds that can be further built
-            using BTC Ordinal inscriptions. BWAs are the 1st Satoshi (Uncommon
+            Bitcoin World Assets (BWAs) are digital world real estate natively born
+            with each block of Bitcoin. BWAs are the 1st Satoshi (Uncommon
             Sats) of the BTC BLOCKS based on a tradition that early BTC miners
             used the 1st sats to represent BTC blocks for record-keeping. BWAs
             can be found as "Uncommon Sats" at marketplaces (e.g.,{" "}
