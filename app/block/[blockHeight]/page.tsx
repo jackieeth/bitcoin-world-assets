@@ -18,6 +18,7 @@ export default function BlockPage() {
   const params = useParams();
   const blockHeight = params.blockHeight;
   const [blockImageUrl, setBlockImageUrl] = useState<string>("");
+  const [satInfo, setSatInfo] = useState<any>({});
   const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
@@ -200,6 +201,19 @@ export default function BlockPage() {
     fetchBlockImage();
   }, [blockHeight]);
 
+  useEffect(() => {
+    async function fetchSat() {
+      if (blockHeight) {
+        const result = await fetch(
+          `https://api.rebarlabs.io/ordinals/v1/sats/${Block1stSat(Number(blockHeight))}`
+        );
+        const satData = await result.json();
+        setSatInfo(satData);
+      }
+    }
+    fetchSat();
+  }, [blockHeight]);
+
   return (
     <main className="relative max-w-screen max-h-screen bg-black text-white">
       <div ref={canvasRef} className="w-full h-screen" />
@@ -208,7 +222,7 @@ export default function BlockPage() {
         <a href="/" className="text-xs text-slate-400">Bitcoin World Asset</a><br/>
         {blockHeight ? `BLOCK ${blockHeight}` : "Loading BTC block..."}
         <br />
-        <span className="text-xs text-slate-400">SAT #{Block1stSat(Number(blockHeight))}</span><br/>
+        <span className="text-xs text-slate-400">SAT #{Block1stSat(Number(blockHeight))} {satInfo && satInfo.name && `(${satInfo.name})`}</span><br/>
         <span className="text-xs">BTC block data <a style={{textDecoration: "underline"}} href={`https://bitfeed.live/block/height/${blockHeight}`}>visualized</a></span><br/>
         {blockImageUrl && (
           <img
