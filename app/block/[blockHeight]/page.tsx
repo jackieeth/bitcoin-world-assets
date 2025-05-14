@@ -205,7 +205,7 @@ export default function BlockPage() {
       <div ref={canvasRef} className="w-full h-screen" />
       
       <div className="absolute top-4 left-4 text-xl">
-        <span className="text-xs text-slate-400">Bitcoin World Asset</span><br/>
+        <a href="/" className="text-xs text-slate-400">Bitcoin World Asset</a><br/>
         {blockHeight ? `BLOCK ${blockHeight}` : "Loading BTC block..."}
         <br />
         <span className="text-xs text-slate-400">SAT #{Block1stSat(Number(blockHeight))}</span><br/>

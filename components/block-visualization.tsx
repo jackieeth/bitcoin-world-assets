@@ -132,17 +132,17 @@ export function BlockVisualization({ blockHeight }: BlockVisualizationProps) {
       const maxSize = Math.max(size.x, size.y, size.z);
       const fov = camera.fov * (Math.PI / 180);
       let distance = maxSize / (2 * Math.tan(fov / 2));
-      distance *= 0.7; // add extra space
+      distance *= 0.4 + Math.random()* 0.1 - 0.1; // add extra space
 
       // Position the camera relative to the center
       camera.position.set(
         center.x + distance,
-        center.y + distance * 0.5,
-        center.z + distance ,
+        center.y + distance * 0.5 + 20,
+        center.z + Math.random() * 4 - 2,
       );
 
       // Adjust the camera to look down more
-      camera.lookAt(center.x, center.y - 300, center.z); // Decrease the y-coordinate to look down
+      camera.lookAt(center.x, center.y , center.z); // Decrease the y-coordinate to look down
 
       // Update the OrbitControls target
       controls.target.copy(center);
@@ -188,7 +188,7 @@ export function BlockVisualization({ blockHeight }: BlockVisualizationProps) {
     <div
       ref={canvasRef}
       style={{
-        height: "60vh", // Full viewport height
+        height: "45vh", // Full viewport height
         width: "95vw", // Full viewport width
         margin: 0,
         padding: 0,

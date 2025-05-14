@@ -13,10 +13,10 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   title: "BITCOIN WORLD ASSETS",
-  description: "Build Digital Worlds on Bitcoin Blocks",
+  description: "Durable Digital Worlds on Bitcoin Blocks",
   openGraph: {
     title: "BITCOIN WORLD ASSETS",
-    description: "Build Digital Worlds on Bitcoin Blocks",
+    description: "Durable Digital Worlds on Bitcoin Blocks",
     url: "https://bitcoinworldassets.com", // update with your domain
     images: [
       {
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "BITCOIN WORLD ASSETS",
-    description: "Build Digital Worlds on Bitcoin Blocks",
+    description: "Durable Digital Worlds on Bitcoin Blocks",
     images: ["https://bitcoinworldassets.com/preview.jpg"],
   },
   generator: "qAI",
