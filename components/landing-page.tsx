@@ -14,6 +14,11 @@ interface LandingPageProps {
   initialSearchQuery?: string;
 }
 
+function shortenString(str: string): string {
+  if (str.length <= 12) return str; // If the string is already short, return it as is
+  return `${str.slice(0, 6)}...${str.slice(-6)}`;
+}
+
 export function LandingPage({
   onSearch,
   initialSearchQuery,
@@ -29,12 +34,40 @@ export function LandingPage({
   const isPastingRef = useRef(false);
   const hasSearchedRef = useRef(false); // guard for initial paste handling
   const [justPasted, setJustPasted] = useState(false);
+  const [latestHolders, setLatestHolders] = useState<
+    { address: string; satDataLength: number; lastUpdate: number }[]
+  >([]);
 
   // Focus the input field when the component mounts
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
+  }, []);
+
+  // Fetch latest holders on component mount
+  useEffect(() => {
+    const fetchLatestHolders = async () => {
+      try {
+        const payload:any = { passcode: process.env.NEXT_PUBLIC_QUARK20_API_KEY };
+          const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+          const body = new URLSearchParams(payload).toString();
+          const res = await fetch(`${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getblockleaders`, {
+            method: "POST",
+            headers: headers,
+            body: body,
+          }).then((d) => d.json());
+    
+        const data = res["data"];
+        if (data) {
+          setLatestHolders(data); // Get the latest 5 holders
+        }
+      } catch (error) {
+        console.error("Error fetching latest holders:", error);
+      }
+    };
+
+    fetchLatestHolders();
   }, []);
 
   // If an initial address is provided, simulate paste handling on mount only once
@@ -195,24 +228,25 @@ export function LandingPage({
     <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <div className="mt-20 max-w-5xl space-y-6 transition-all duration-500">
         <div className="flex items-center justify-center">
+          
           <img
             src={btclogo.src}
             alt="Bitcoin Logo"
             className="w-12 h-12 mr-2" // adjust size and spacing as needed
-          />
+          /><a href="/">
           <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">
             BITCOIN WORLD ASSETS
-          </h1>
+          </h1></a>
         </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
           IMMUTABLE DIGITAL WORLD REAL ESTATE
           <br />
           <br />
           <small>
-            Bitcoin World Assets (BWAs) are digital world real estate natively born
+            Bitcoin World Assets (BWAs) are the <i>root</i> digital world real estate assets natively born
             with each block of Bitcoin. BWAs are the 1st Satoshi (Uncommon
             Sats) of the BTC BLOCKS based on a tradition that early BTC miners
-            used the 1st sats to represent BTC blocks for record-keeping. BWAs
+            used the 1st satoshis to represent BTC blocks for record-keeping. BWAs
             can be found as "Uncommon Sats" at marketplaces (e.g.,{" "}
             <a
               style={{ textDecoration: "underline" }}
@@ -279,6 +313,21 @@ export function LandingPage({
           <div className="text-white-500 mb-4">{errorMessage}</div>
         )}
       </div>
+
+   {latestHolders.length > 0 ? (
+    <div className="text-gray-300 mt-8">- Latest BWA holders -<br/>
+          {latestHolders.map((holder, index) => (
+            <small key={`b-${index}`}>
+                <a href={`/address/${holder.address}`}>{shortenString(holder.address)}</a>
+                
+                  {`: `}{holder.satDataLength}<br/>
+                
+              </small>
+            ))}
+          </div>
+        ) : (
+          <div className="text-gray-300 mt-8">Loading latest holders...</div>
+        )}
 
       {/* 3D Block Visualization Section */}
       <BlockVisualization blockHeight={518357} />
