@@ -123,7 +123,7 @@ export function Gallery({ initialFilter = "", itemsData }: GalleryProps) {
       ) : (
         <div>
         <div className="flex items-center justify-center border border-white/10 text-white/60 mb-4">
-          {items.length > 1 ? `${items.length} BWAs found` : `1 BWA found`}.
+          {items.length > 1 ? `${items.length} Bitcoin World Assets found` : `1 Bitcoin World Asset found`}.
         </div>
         <div className={gridClasses}>
           

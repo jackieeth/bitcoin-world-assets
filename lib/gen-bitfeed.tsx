@@ -672,6 +672,23 @@ class MondrianLayout {
   }
 }
 
+export const Block1stSat = (blockHeight:number) => {
+    const blockReward0 = 5000000000;
+    const halvingInv = 210000;
+    
+    const blockReward = (epoch:number) => {
+      return blockReward0 / 2 ** epoch;
+    };
+
+    const epoch = Math.floor(blockHeight/halvingInv);
+    let satNumber = 0;
+    for (let index = 0; index < epoch; index++) {
+      satNumber += blockReward(index) * halvingInv;
+    }
+    satNumber += (blockHeight%halvingInv) * blockReward(epoch);
+    return satNumber;
+  }
+
 const logTxSize = (value: number) => {
   if (value === 0) return 1;
   let scale = Math.ceil(Math.log10(value)) - 5;

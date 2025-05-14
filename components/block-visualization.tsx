@@ -1,25 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { useParams } from "next/navigation";
 import {
   genBitFeedMml,
   processXMLNode,
   updateAnimations,
-  getBlockImage,
-  Block1stSat
-} from "../../../lib/gen-bitfeed";
+} from "../lib/gen-bitfeed";
 
-export default function BlockPage() {
+interface BlockVisualizationProps {
+  blockHeight: number;
+}
+
+export function BlockVisualization({ blockHeight }: BlockVisualizationProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const objectsRef = useRef<any[]>([]); // Initialize objectsRef as an empty array
-  const params = useParams();
-  const blockHeight = params.blockHeight;
-  const [blockImageUrl, setBlockImageUrl] = useState<string>("");
-  const [imgLoaded, setImgLoaded] = useState(false);
-
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -39,9 +35,10 @@ export default function BlockPage() {
       1000,
     );
     camera.position.set(50, 40, 80);
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Enable alpha for transparency
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0); // Set clear color to transparent
 
     // Enable shadows
     renderer.shadowMap.enabled = true;
@@ -63,7 +60,7 @@ export default function BlockPage() {
     // Parse MML data and create the 3D model
     createMMLStructure(Number(blockHeight));
 
-    window.addEventListener("resize", onWindowResize);
+    // window.addEventListener("resize", onWindowResize);
 
     // Setup scene lighting
     function setupLights() {
@@ -135,15 +132,17 @@ export default function BlockPage() {
       const maxSize = Math.max(size.x, size.y, size.z);
       const fov = camera.fov * (Math.PI / 180);
       let distance = maxSize / (2 * Math.tan(fov / 2));
-      distance *= 0.8; // add extra space
+      distance *= 0.7; // add extra space
 
       // Position the camera relative to the center
       camera.position.set(
         center.x + distance,
-        center.y + distance,
-        center.z + distance,
+        center.y + distance * 0.5,
+        center.z + distance ,
       );
-      camera.lookAt(center);
+
+      // Adjust the camera to look down more
+      camera.lookAt(center.x, center.y - 300, center.z); // Decrease the y-coordinate to look down
 
       // Update the OrbitControls target
       controls.target.copy(center);
@@ -178,46 +177,23 @@ export default function BlockPage() {
     }
     animate();
 
-    // Cleanup on unmount
     return () => {
-      if (canvasRef.current && renderer.domElement) {
-        canvasRef.current.removeChild(renderer.domElement);
-      }
+      // Cleanup resources on unmount
+      canvasRef.current?.removeChild(renderer.domElement);
       renderer.dispose();
     };
-  }, []);
-
-  useEffect(() => {
-    async function fetchBlockImage() {
-      if (blockHeight) {
-        const url = await getBlockImage(
-          Number(blockHeight),
-          process.env.NEXT_PUBLIC_BLOCKIMAGE_URL || ""
-        );
-        setBlockImageUrl(url);
-      }
-    }
-    fetchBlockImage();
   }, [blockHeight]);
 
   return (
-    <main className="relative max-w-screen max-h-screen bg-black text-white">
-      <div ref={canvasRef} className="w-full h-screen" />
-      
-      <div className="absolute top-4 left-4 text-xl">
-        <span className="text-xs text-slate-400">Bitcoin World Asset</span><br/>
-        {blockHeight ? `BLOCK ${blockHeight}` : "Loading BTC block..."}
-        <br />
-        <span className="text-xs text-slate-400">SAT #{Block1stSat(Number(blockHeight))}</span><br/>
-        <span className="text-xs">BTC block data <a style={{textDecoration: "underline"}} href={`https://bitfeed.live/block/height/${blockHeight}`}>visualized</a></span><br/>
-        {blockImageUrl && (
-          <img
-            src={blockImageUrl}
-            className={`w-24 h-24 mt-2 grayscale transition-opacity duration-700 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-            onLoad={() => setImgLoaded(true)}
-          />
-        )}
-      </div>
-    </main>
+    <div
+      ref={canvasRef}
+      style={{
+        height: "60vh", // Full viewport height
+        width: "95vw", // Full viewport width
+        margin: 0,
+        padding: 0,
+        overflow: "hidden", // Prevent scrollbars
+      }}
+    />
   );
 }

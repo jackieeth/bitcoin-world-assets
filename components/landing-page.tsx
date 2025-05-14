@@ -7,6 +7,7 @@ import { Ordiscan } from "ordiscan";
 import { Gallery, Item } from "@/components/gallery";
 import btclogo from "../styles/bitcoin-logo.png";
 import { getBlockImage } from "@/lib/gen-bitfeed";
+import { BlockVisualization } from "@/components/block-visualization";
 
 interface LandingPageProps {
   onSearch: (query: string) => void;
@@ -109,7 +110,7 @@ export function LandingPage({
       });
 
       const filtered = response.filter((item: any) =>
-        item.satributes.includes("UNCOMMON"),
+        item.satributes.includes("UNCOMMON")
       );
       const SatBlocks = [];
       for (const item of filtered) {
@@ -125,10 +126,10 @@ export function LandingPage({
       setRareSats(SatBlocks);
       if (SatBlocks.length === 0) {
         setLoading(false);
-      setErrorMessage("No BWAs found in this BTC address");
-      }else{
-      setErrorMessage(null); // Clear error if successful
-    }
+        setErrorMessage("No BWAs found in this BTC address");
+      } else {
+        setErrorMessage(null); // Clear error if successful
+      }
     } catch (error: any) {
       console.error(error);
       setLoading(false);
@@ -156,7 +157,7 @@ export function LandingPage({
             ),
             sat: Number(sat.satStash),
             date: new Date().toISOString(),
-          })),
+          }))
         );
         setAwaitGalleryItems(items.sort((a, b) => a.sat - b.sat));
       } catch (error) {
@@ -180,7 +181,7 @@ export function LandingPage({
 
   return (
     <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      <div className="mt-4 max-w-5xl space-y-8 transition-all duration-500">
+      <div className="mt-4 max-w-5xl space-y-6 transition-all duration-500">
         <div className="flex items-center justify-center">
           <img
             src={btclogo.src}
@@ -196,7 +197,13 @@ export function LandingPage({
           <br />
           <br />
           <small>
-            Bitcoin World Assets (BWAs) are digital real estate natively born with each block of Bitcoin (fair distribution to miners). BWAs are the foundation of durable digital worlds that can be further built using BTC Ordinal inscriptions. BWAs are the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS based on a tradition that early BTC miners used the 1st sats to represent BTC blocks for record-keeping. BWAs can be found as "Uncommon Sats" at marketplaces (e.g.,{" "}
+            Bitcoin World Assets (BWAs) are digital real estate natively born
+            with each block of Bitcoin (fair distribution to miners). BWAs are
+            the foundation of durable digital worlds that can be further built
+            using BTC Ordinal inscriptions. BWAs are the 1st Satoshi (Uncommon
+            Sats) of the BTC BLOCKS based on a tradition that early BTC miners
+            used the 1st sats to represent BTC blocks for record-keeping. BWAs
+            can be found as "Uncommon Sats" at marketplaces (e.g.,{" "}
             <a
               style={{ textDecoration: "underline" }}
               href={`https://magiceden.us/ordinals/marketplace/rare-sats`}
@@ -262,6 +269,9 @@ export function LandingPage({
           <div className="text-white-500 mb-4">{errorMessage}</div>
         )}
       </div>
+
+      {/* 3D Block Visualization Section */}
+      <BlockVisualization blockHeight={518357} />
     </div>
   );
 }
