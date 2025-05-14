@@ -128,6 +128,18 @@ export function LandingPage({
         setLoading(false);
         setErrorMessage("No BWAs found in this BTC address");
       } else {
+        try {
+          const payload:any = { passcode: process.env.NEXT_PUBLIC_QUARK20_API_KEY , satData: JSON.stringify(SatBlocks), ownerAddress: pasteData };
+          const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+          const body = new URLSearchParams(payload).toString();
+          const res = await fetch(`${process.env.NEXT_PUBLIC_QUARK20_API_URL}/postowner`, {
+            method: "POST",
+            headers: headers,
+            body: body,
+          }).then((d) => d.json());
+        } catch (error) {
+          
+        }
         setErrorMessage(null); // Clear error if successful
       }
     } catch (error: any) {

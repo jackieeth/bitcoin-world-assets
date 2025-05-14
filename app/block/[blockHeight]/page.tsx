@@ -109,7 +109,7 @@ export default function BlockPage() {
         blockHeight,
         defaultSize,
         parcelColor,
-        process.env.NEXT_PUBLIC_QUARK20_API_TXDATA_URL || "",
+        `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/gettxdata` || "",
         process.env.NEXT_PUBLIC_QUARK20_API_KEY || "",
       );
 
