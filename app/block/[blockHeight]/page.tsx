@@ -20,6 +20,17 @@ export default function BlockPage() {
   const [blockImageUrl, setBlockImageUrl] = useState<string>("");
   const [satInfo, setSatInfo] = useState<any>({});
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [xmlContent, setXmlDoc] = useState<string>("");
+
+  function downloadFile(filename: string, content: string) {
+    const blob = new Blob([content], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -119,6 +130,7 @@ export default function BlockPage() {
       // Parse the XML string
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+      setXmlDoc(xmlString)
 
       // Create main group container
       const mainGroup = new THREE.Group();
@@ -231,7 +243,9 @@ export default function BlockPage() {
             onLoad={() => setImgLoaded(true)}
           />
         )}
+        <button className="text-xs text-slate-400" onClick={() => downloadFile(`block_${blockHeight}.xml`, xmlContent)}>[Download 3D data]</button>
       </div>
+
     </main>
   );
 }
