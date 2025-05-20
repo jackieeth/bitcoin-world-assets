@@ -36,8 +36,11 @@ This is the tech stack:
 - **Metaverse Markup Language** (3D data)
 
 ## Challenges we ran into
-
-We have to use multiple APIs and our own calculations related to Sat indexing and rarity data for locating and visualizing each BTC blocks as BWA. There shall be an integrated API for it.
+The biggest challenge is to make it obvious for people to recognize the place to build digital worlds is on BTC blocks. Other than that, there are a few more things:
+1. It is tricky to define the ownership of BTC blocks. Can block ownership be defined by social consensus like the way `.bitmap` text inscription was formulated? Is there BTC-centric convention and history that we can follow? Is there a definition given by cryptographic proofs?
+2. We have to use multiple APIs and our own calculations related to Sat indexing and rarity data. There are BTC block images based on BitFeed representation algorithm, but there are 840k+ of those. We need an efficient way to index and present them.
+3. Visualizing each BTC blocks can be tricky because there is a new block every 10 minutes. Although, mempool.space has the visualization but there shall be an integrated API for devs to use those images or 3d data easily.
+4. It'd be great to have more devs to build things on BTC blocks, but how we can make this process easier and enjoyable.
 
 ## Accomplishments that we're proud of
 
@@ -49,7 +52,7 @@ We identified a fair distributed BTC asset class (i.e., using Uncommon Sats as t
 
 ## What we learned
 
-It is tricky to define the ownership of BTC blocks. We had to define Bitcoin World Assets with Uncommon Sats for highlighting this cryptographically valid and verifiable BTC asset class as well as visualizing it with popular BitFeed representation.
+We had to define **Bitcoin World Assets with Uncommon Sats** for highlighting this cryptographically valid and verifiable BTC asset class. To make BWAs more approachable, we had to visualize them in 2D and 3D as well as making their 3D data available for download so that world builders, game devs, or 3d developers can use these 3D data to build more on top of these assets.
 
 ## What's next for Bitcoin World Assets
 
@@ -79,7 +82,7 @@ Currently, this is a BTC wallet asset inspection and 3D visualization website. W
 
 3. **Configure environment variables:**
 
-   Create a `.env` file in the root directory and set the following (get API keys from Ordiscan and Quark20):
+   Create a `.env` file in the root directory and set the following (get API keys from [Ordiscan](https://ordiscan.com/docs/api#introduction) and [Quark20](https://x.com/quark20hq)):
 
    ```
    NEXT_PUBLIC_ORDISCAN_API_KEY=your_ordiscan_api_key
