@@ -37,15 +37,19 @@ This is the tech stack:
 
 ## Challenges we ran into
 
-We have to use multiple APIs and our own calculations related to Sat indexing and rarity data for locating and visualizing each BWA. There shall be an integrated API for it.
+We have to use multiple APIs and our own calculations related to Sat indexing and rarity data for locating and visualizing each BTC blocks as BWA. There shall be an integrated API for it.
 
 ## Accomplishments that we're proud of
 
-We identified a fair distributed BTC asset class (i.e., using Uncommon Sats as the foundation layer of digital worlds) and provided a wallet inspection tool for it.
+We identified a fair distributed BTC asset class (i.e., using Uncommon Sats as the foundation layer of digital worlds) and provided a wallet inspection tool for it. We accomplished:
+1. a static one-pager web-client site for BTC asset lookup with just an address WITHOUT wallet signin (read-only, safe, and easy-to-use),
+2. a smooth experience of browsing visualized BTC blocks in 2D AND 3D,
+3. downloadable 3D data and image-index up-to block 840k, and
+4. possibilities for building durable digital worlds on top of Bitcoin blocks.
 
 ## What we learned
 
-It is tricky to define the ownership of BTC blocks so we had to define Bitcoin World Assets with Uncommon Sats for highlighting this cryptographically valid and verifiable BTC asset class as well as visualizing it with popular BitFeed representation.
+It is tricky to define the ownership of BTC blocks. We had to define Bitcoin World Assets with Uncommon Sats for highlighting this cryptographically valid and verifiable BTC asset class as well as visualizing it with popular BitFeed representation.
 
 ## What's next for Bitcoin World Assets
 
@@ -75,7 +79,7 @@ Currently, this is a BTC wallet asset inspection and 3D visualization website. W
 
 3. **Configure environment variables:**
 
-   Create a `.env.local` file in the root directory and set the following (get API keys from Ordiscan and Quark20):
+   Create a `.env` file in the root directory and set the following (get API keys from Ordiscan and Quark20):
 
    ```
    NEXT_PUBLIC_ORDISCAN_API_KEY=your_ordiscan_api_key
