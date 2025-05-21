@@ -14,10 +14,15 @@ declare module "three" {
   }
 }
 
+const imagePlaceholder = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQABAwGq9NAAAAAASUVORK5CYII=`
+
 // Updated getBlockImage with caching support
 export const getBlockImage = async (blockNumber: number, blockimgUri: string) => {
+  try {
     const part = Math.floor(blockNumber / 50000) * 50;
-
+    if (part > 800) {
+      return imagePlaceholder
+    }
     let data;
     if (blockJsonCache.has(part)) {
       data = blockJsonCache.get(part);
@@ -29,9 +34,13 @@ export const getBlockImage = async (blockNumber: number, blockimgUri: string) =>
 
     const inscriptionId = data[`${blockNumber}`];
     if (!inscriptionId) {
-      return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQABAwGq9NAAAAAASUVORK5CYII=`; // Placeholder image
+      return imagePlaceholder;
     }
     return `${blockimgUri}/${inscriptionId}`;
+  } catch (error) {
+    return imagePlaceholder
+  }
+    
   };
 
 export const updateAnimations = (objects: THREE.Object3D[], delta: number) => {
