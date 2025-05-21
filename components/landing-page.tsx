@@ -143,7 +143,9 @@ export function LandingPage({
       });
 
       const filtered = response.filter((item: any) =>
-        item.satributes.includes("UNCOMMON")
+        item.satributes.some((attribute: string) =>
+          ["UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"].includes(attribute) //add full Rodarmor Rarity list
+        )
       );
       const SatBlocks = [];
       for (const item of filtered) {
