@@ -1,21 +1,30 @@
 # Bitcoin World Assets
-**Bitcoin World Assets** (https://bitcoinworldassets.com) is a web application for visualizing and exploring Bitcoin World Assets (BWAs) as digital world real estate natively tied to Bitcoin blocks. Each BWA represents the first Satoshi ("Uncommon Sat") of a Bitcoin block, visualized as a unique digital 3D world. The project integrates BTC block data, BTC Ordinals protocol, rare sats, and 3D visualization.
+**Bitcoin World Assets** (https://bitcoinworldassets.com) is a web application for visualizing and exploring Bitcoin World Assets (BWAs) as digital world real estate natively tied to Bitcoin blocks. Each BWA represents the first Satoshi ("Uncommon Sat") of a Bitcoin block, visualized as a unique digital 3D world. The project integrates BTC block data, BTC Ordinals protocol, rare sats, and 3D visualization. If you own Bitcoin, you may own BWAs.
 
 ![image](https://github.com/user-attachments/assets/41cb8081-1c14-4854-b104-07df455be578)
 
 ## Inspiration
 Can digital worlds be built on BTC blocks with digital assets such as BTC ordinals, inscriptions, and rare sats? The records of these BTC digital assets have been sealed in BTC blocks because they are all BTC transactions of UTXOs. BTC ordinals (inscriptions) were created with immutable text, image, video, or self-contained HTML pages, and then are transacted via BTC transfers.
 
-Why virtual worlds on BTC blocks? Bitcoin signifies the most decentralized and secure network. It is reasonable to use BTC blocks as the foundation layer of the BTC digital world. What does the digital world look like? There has been a tradition of staring at the mempool to see the next block, fee-rate changes, looking up transaction details, and other data inquiries on Bitcoin blockchain data. The mempool project started using a way to visualize BTC transactions as rectangles moving inside a right rectangle (the block) to represent mempool activities of unconfirmed transactions. After confirmation (block was mined), the layout of rectangles freezes. This was Mempool algorithm called BitFeed. This square look of a rectangular collage has been a tradition to visualize how a BTC block's "look". Can these blocks be treated like real estates of digital worlds?
+Why virtual worlds on BTC blocks? Bitcoin signifies the most decentralized and secure network. It is reasonable to use BTC blocks as the foundation layer of the BTC digital world. What does the digital world look like? There has been a tradition of staring at the mempool to see the next block, fee-rate changes, looking up transaction details, and other data inquiries on Bitcoin blockchain data. The mempool project started using a way to visualize BTC transactions as rectangles moving inside a right rectangle (the block) to represent mempool activities of unconfirmed transactions. After confirmation (block was mined), the layout of rectangles freezes. This was the Mempool algorithm called BitFeed. This square look of a rectangular collage has been a tradition to visualize how a BTC block's "look" is. Can these blocks be treated like real estate in digital worlds?
 
-There have been many digital world projects, many with blockchain ownership tokens. However, BTC is still the most durable, immutable, and decentralized platform. Building digital worlds on other blockchains is like stepping on empty stairs. They may just disappear one day. A related project called Bitmap started a rush of inscribing btc block number from 0 to 889000 (the latest btc block height number) as '<blockheight>.bitmap' for claiming ownership of the inscribed block. This is a great crowd-initiated example of a metaverse initiative using btc digital assets. however, what constitutes the ownership of the btc block?
+There have been many digital world projects, many with blockchain ownership tokens. However, BTC is still the most durable, immutable, and decentralized platform. Building digital worlds on other blockchains is like stepping on empty stairs. They may just disappear one day. A related project called Bitmap started a rush of inscribing btc block numbers from 0 to 889000 (the latest btc block height number) as '<blockheight>.bitmap' for claiming ownership of the inscribed block. This is a great crowd-initiated example of a metaverse initiative using BTC digital assets. However, what constitutes the ownership of the BTC block?
 
-How do we define the ownership of BTC blocks? Blocks were mined by miners who achieved and be verified with proof-of-work via btc network consensus. Do miners own the btc blocks they mined? Miners do own the btc block rewards from the coinbase transaction (the first tx of the block). Since btc blockchain consists of a network of nodes, all btc blocks are stored at the node operators' networked machines that are relaying transactions. bitmap inscriptions may self-claim the ownership of btc blocks but it is arguable.
+### How do we define the ownership of BTC blocks? 
+Blocks were mined by miners who achieved and be verified with proof-of-work via btc network consensus. Do miners own the BTC blocks they mined? Miners do own the BTC block rewards from the coinbase transaction (the first tx of the block). Since Bitcoin consists of a network of nodes, all BTC blocks are stored at the node operators' networked machines, relaying transactions. bitmap inscriptions may self-claim the ownership of BTC blocks, but it is arguable.
 
-The **Uncommon Sats** approach is to use the first satoshi of the block to represent the block ownership. in btc ordinal theory, the first satoshi of the block is an "uncommon" satoshi. in early days of bitcoin, certain miners were sending the first sat to themselves as record-keeping. This may be a more BTC way of characterizing btc block ownership. To settle this block ownership debate, let us adopt both because the bitmap project contributes from the community-building aspect and the uncommon sat approach representing the technical details based on how bitcoin works. how to build digital worlds with digital world assets? current digital assets are arranged in unstructured and arbitrary ways. organizing digital assets as a personal collectible gallery was very popular in 2021 due to the NFT boom. here we propose a way to organize digital assets as building their digital worlds with 3d representation methods. This method of organizing assets turns unstructured digital assets into digital world assets in 3d virtual worlds.
+The **Uncommon Sats** approach is to use the first satoshi of the block to represent the block ownership. In BTC ordinal theory, the first Satoshi of the block is an "uncommon" Satoshi. In the early days of Bitcoin, certain miners were sending the first satoshi to themselves as record-keeping. This may be a more BTC way of characterizing BTC block ownership. To settle this block ownership debate, let us adopt both because the bitmap project contributes from the organic community-building aspect as **social deeds**, and the uncommon sat approach represents the technical details based on how Bitcoin works as **crypto deeds**. 
+
+BTC block ownership _can_ be represented as the following:
+
+- social deeds: `<blockHeight>.bitmap` - FCFS text BTC Ordinals inscriptions up to the current block height. 
+- crypto deeds: `Uncommon Sat` - the first satoshi of the BTC block rewards created by Bitcoin and miner proof of work. We characterize these as _Bitcoin World Assets (BWAs)_.
+
+### How to build digital worlds with BWAs? 
+Current digital assets are arranged in unstructured and arbitrary ways. Organizing digital assets as a personal collectible gallery was popular in 2021 due to the NFT boom. Here, we suggest a 3D world-building approach to organizing digital assets with 3d representation methods based on the Bitcoin block layouts (the BitFeed representation). We provide a direct download link for each block's 3d data for world builders to integrate BWAs in 3D apps like games.
 
 ## What it does
-When a BTC user pasted their BTC or Ordinal address, this website will display Bitcoin World Assets (i.e., "Uncommon" satoshis) that they cryptographically owned in this wallet. In this grid view, each BWA is visualized based on its own BTC block TXs using mempool.space's BitFeed representation (the most popular and commonly accepted BTC block visualization). After the user clicked on Bitcoin World Asset thumbnail image, it transits to a full page 3D visualization of this BWA with info and downloadable 3D data.
+When a BTC user pastes their BTC or Ordinal address, this website will display Bitcoin World Assets (i.e., "Uncommon" satoshis) that they cryptographically own in this wallet. In this grid view, each BWA is visualized based on its own BTC block TXs using the mempool.space's BitFeed representation (the most popular and commonly accepted BTC block visualization). After the user clicks on the Bitcoin World Asset thumbnail image, it transits to a full page 3D visualization of this BWA with info and downloadable 3D data.
 
 - **Paste BTC/Ordinal Address:** Instantly discover and visualize the rare "Uncommon Sats" you own.
 - **Gallery of BWAs:** View your BWAs (Uncommon Sats), including block number, attributes, and block images (visualized using the BitFeed representation).
@@ -36,11 +45,11 @@ This is the tech stack:
 - **Metaverse Markup Language** (3D data)
 
 ## Challenges we ran into
-The biggest challenge is to make it obvious for people to recognize the place to build digital worlds is on BTC blocks. Other than that, there are a few more things:
-1. It is tricky to define the ownership of BTC blocks. Can block ownership be defined by social consensus like the way `.bitmap` text inscription was formulated? Is there BTC-centric convention and history that we can follow? Is there a definition given by cryptographic proofs?
-2. We have to use multiple APIs and our own calculations related to Sat indexing and rarity data. There are BTC block images based on BitFeed representation algorithm, but there are 840k+ of those. We need an efficient way to index and present them.
-3. Visualizing each BTC blocks can be tricky because there is a new block every 10 minutes. Although, mempool.space has the visualization but there shall be an integrated API for devs to use those images or 3d data easily.
-4. It'd be great to have more devs to build things on BTC blocks, but how we can make this process easier and enjoyable.
+The biggest challenge is to make it obvious for people to recognize that **the place** to build digital worlds is on BTC blocks. Other than that, there are a few more things:
+1. It is tricky to define the ownership of BTC blocks. Can block ownership be claimed by social consensus, like the way `.bitmap` text inscription was formulated? Is there a BTC-centric convention and history that we can follow? Is there a definition given by cryptographic proofs?
+2. We had to use multiple APIs and our calculations related to Sat indexing and rarity data. There are BTC block images based on the BitFeed representation algorithm, but there are 840k+ of those. We need an efficient way to index and present them.
+3. Visualizing each BTC block can be tricky because there is a new block every 10 minutes. Although mempool.space has the visualization but there shall be an integrated API for devs to use those images or 3d data easily.
+4. It'd be great to have more devs to build things on BTC blocks, but how can we make this process easier and enjoyable?
 
 ## Accomplishments that we're proud of
 
@@ -52,11 +61,11 @@ We identified a fair distributed BTC asset class (i.e., using Uncommon Sats as t
 
 ## What we learned
 
-We had to define **Bitcoin World Assets with Uncommon Sats** for highlighting this cryptographically valid and verifiable BTC asset class. To make BWAs more approachable, we had to visualize them in 2D and 3D as well as making their 3D data available for download so that world builders, game devs, or 3d developers can use these 3D data to build more on top of these assets.
+We had to define **Bitcoin World Assets with Uncommon Sats** for highlighting this cryptographically valid and verifiable BTC asset class. To make BWAs more approachable, we had to visualize them in 2D and 3D, as well as making their 3D data available for download so that world builders, game devs, or 3d developers can use these 3D data to build more on top of these assets.
 
 ## What's next for Bitcoin World Assets
 
-Currently, this is a BTC wallet asset inspection and 3D visualization website. We'd like to integrate the "building" aspect on top of these _root_ digital world assets as well as packaging this into a simple API call for future BWA developers.
+Currently, this is a website for inspecting BTC wallet assets and 3D visualization. We want to integrate the "building" aspect on top of these _root_ digital world assets as well as packaging this into a simple API call for future BWA developers.
 
 ## Getting Started
 
@@ -77,7 +86,7 @@ Currently, this is a BTC wallet asset inspection and 3D visualization website. W
    ```bash
    pnpm i
    # or
-   yarn install
+   yarn
    ```
 
 3. **Configure environment variables:**
