@@ -11,8 +11,6 @@ import { BlockVisualization } from "@/components/block-visualization";
 
 const MagicEdenUncommonSatsListingsUri =
   process.env.NEXT_PUBLIC_MAGICEDEN_UNCOMMON_LISTINGS_URI;
-const MagicEdenApiKey =
-  process.env.NEXT_PUBLIC_MAGICEDEN_API_KEY;
 
 interface LandingPageProps {
   onSearch: (query: string) => void;
@@ -116,7 +114,9 @@ export function LandingPage({
         const res = await fetch(`${MagicEdenUncommonSatsListingsUri}`, {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${MagicEdenApiKey}`}
+            "Content-Type": "application/json",
+          },
+          credentials: "include"
         }).then((d) => d.json());
 
         const data = res["tokens"];
