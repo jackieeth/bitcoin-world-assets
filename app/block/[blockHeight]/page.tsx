@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Ordiscan from "ordiscan";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useParams } from "next/navigation";
@@ -14,13 +15,15 @@ import {
 
 export default function BlockPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const objectsRef = useRef<any[]>([]); // Initialize objectsRef as an empty array
+  const objectsRef = useRef<any[]>([]);
   const params = useParams();
   const blockHeight = params.blockHeight;
   const [blockImageUrl, setBlockImageUrl] = useState<string>("");
   const [satInfo, setSatInfo] = useState<any>({});
   const [imgLoaded, setImgLoaded] = useState(false);
   const [xmlContent, setXmlDoc] = useState<string>("");
+  // New state for parcel stats
+  const [parcelStats, setParcelStats] = useState<{ counts: Record<string, number>, total: number } | null>(null);
 
   function downloadFile(filename: string, content: string) {
     const blob = new Blob([content], { type: "text/plain" });
@@ -35,14 +38,10 @@ export default function BlockPage() {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Create a clock for animation timing
     const clock = new THREE.Clock();
-
-    // Main scene variables
     let scene: any, camera: any, renderer: any, controls: any;
     let objects = [];
 
-    // Setup scene, camera, and renderer
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(
       60,
@@ -54,56 +53,39 @@ export default function BlockPage() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-
-    // Enable shadows
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Soft shadows
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     canvasRef.current.appendChild(renderer.domElement);
 
-    // Add orbit controls
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
 
     controls.zoomSpeed = 1.0;
-    // controls.autoRotate = true;
     controls.rotateSpeed = 0.1;
 
-    // Setup lighting
     setupLights();
-
-    // Parse MML data and create the 3D model
     createMMLStructure(Number(blockHeight));
-
     window.addEventListener("resize", onWindowResize);
 
-    // Setup scene lighting
     function setupLights() {
-      // Ambient light
       const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
       scene.add(ambientLight);
 
-      // Primary light for shadows - directional light
       const mainLight = new THREE.DirectionalLight(0xffffff, 2.8);
       mainLight.position.set(50, 50, 25);
       mainLight.castShadow = true;
-
-      // Configure shadow properties
       mainLight.shadow.mapSize.width = 2048;
       mainLight.shadow.mapSize.height = 2048;
       mainLight.shadow.camera.near = 0.5;
       mainLight.shadow.camera.far = 500;
-
-      // Set the shadow camera frustum to cover the entire scene
       const d = 100;
       mainLight.shadow.camera.left = -d;
       mainLight.shadow.camera.right = d;
       mainLight.shadow.camera.top = d;
       mainLight.shadow.camera.bottom = -d;
-
       scene.add(mainLight);
 
-      // Secondary lights (no shadows, just for better illumination)
       const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
       backLight.position.set(-10, 10, -10);
       scene.add(backLight);
@@ -113,11 +95,10 @@ export default function BlockPage() {
       scene.add(fillLight);
     }
 
-    // Parse and create the entire MML structure
     async function createMMLStructure(blockHeight: number) {
       const defaultSize = 0.5;
-      const parcelColor = "#cccccc"; //"#f7931a";
-      const { mmlFile, blockWidth } = await genBitFeedMml(
+      const parcelColor = "#cccccc";
+      const { mmlFile, blockWidth, parcelSizeCounts } = await genBitFeedMml(
         blockHeight,
         defaultSize,
         parcelColor,
@@ -125,73 +106,55 @@ export default function BlockPage() {
         process.env.NEXT_PUBLIC_QUARK20_API_KEY || "",
       );
 
-      const xmlString = mmlFile;
+      // Set parcel stats state
+      setParcelStats({
+        counts: parcelSizeCounts,
+        total: Object.values(parcelSizeCounts).reduce((sum, count) => sum + count, 0)
+      });
 
-      // Parse the XML string
+      const xmlString = mmlFile;
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlString, "text/xml");
       setXmlDoc(xmlString)
-
-      // Create main group container
       const mainGroup = new THREE.Group();
-
-      // Process the XML document
       objectsRef.current = processXMLNode(xmlDoc.documentElement, mainGroup);
-
-      // Add the main group to the scene
       scene.add(mainGroup);
 
-      // Auto-scale camera to fit the 3D content
       const box = new THREE.Box3().setFromObject(mainGroup);
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
       const maxSize = Math.max(size.x, size.y, size.z);
       const fov = camera.fov * (Math.PI / 180);
       let distance = maxSize / (2 * Math.tan(fov / 2));
-      distance *= 0.8; // add extra space
-
-      // Position the camera relative to the center
+      distance *= 0.8;
       camera.position.set(
         center.x + distance,
         center.y + distance,
         center.z + distance,
       );
       camera.lookAt(center);
-
-      // Update the OrbitControls target
       controls.target.copy(center);
       controls.update();
-
-      // Update the camera aspect ratio and renderer size
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // Handle window resizing
     function onWindowResize() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // Animation loop
     function animate() {
       requestAnimationFrame(animate);
-
-      // Update all object animations (models, cylinders, spheres, cubes)
-      const delta = clock.getDelta(); // seconds.
+      const delta = clock.getDelta();
       updateAnimations(objectsRef.current, delta);
-
-      // Update controls
       controls.update();
-
-      // Render scene
       renderer.render(scene, camera);
     }
     animate();
 
-    // Cleanup on unmount
     return () => {
       if (canvasRef.current && renderer.domElement) {
         canvasRef.current.removeChild(renderer.domElement);
@@ -216,11 +179,16 @@ export default function BlockPage() {
   useEffect(() => {
     async function fetchSat() {
       if (blockHeight) {
-        const result = await fetch(
-          `https://api.rebarlabs.io/ordinals/v1/sats/${Block1stSat(Number(blockHeight))}`
+        const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
+        if (!apiKey) throw new Error("API key not provided");
+        const ordiscan = new Ordiscan(apiKey);
+        const satData = await ordiscan.sat.getInfo(Block1stSat(Number(blockHeight)));
+
+        const sortedSatributes = satData.satributes.sort(
+          (a: string, b: string) => a.localeCompare(b),
         );
-        const satData = await result.json();
-        setSatInfo(satData);
+        const satDataWithRarity = { ...satData, rarity: sortedSatributes.join(" ") };
+        setSatInfo(satDataWithRarity);
       }
     }
     fetchSat();
@@ -234,8 +202,13 @@ export default function BlockPage() {
         <a href="/" className="text-xs text-slate-400">Bitcoin World Asset</a><br/>
         {blockHeight ? `BLOCK ${blockHeight}` : "Loading BTC block..."}
         <br />
-        <span className="text-xs text-slate-400">SAT #{Block1stSat(Number(blockHeight))} {satInfo && satInfo.name && `(${satInfo.name})`}</span><br/>
-        <span className="text-xs">BTC block data <a style={{textDecoration: "underline"}} href={`https://bitfeed.live/block/height/${blockHeight}`}>visualized</a></span><br/>
+        <span className="text-xs text-slate-400">
+          SAT #{Block1stSat(Number(blockHeight))} {satInfo && satInfo.rarity && `(${satInfo.rarity})`}<br/>
+          {satInfo.creation_date}<br/>
+        </span>
+        <span className="text-xs">
+          BTC block data <a style={{textDecoration: "underline"}} href={`https://bitfeed.live/block/height/${blockHeight}`}>visualized</a>
+        </span><br/>
         {blockImageUrl && (
           <img
             src={blockImageUrl}
@@ -243,7 +216,21 @@ export default function BlockPage() {
             onLoad={() => setImgLoaded(true)}
           />
         )}
-        <button className="text-xs text-slate-400" onClick={() => downloadFile(`block_${blockHeight}.xml`, xmlContent)}>[Download 3D data]</button>
+        <button
+          className="text-xs text-slate-400"
+          onClick={() => downloadFile(`block_${blockHeight}.xml`, xmlContent)}
+        >
+          [Download 3D data]
+        </button>
+        {parcelStats && (
+          <div className="text-xs mt-2">
+            <strong>Parcel info:</strong><br/>
+            {Object.entries(parcelStats.counts).map(([size, count]) => (
+              <div key={size}>size {size}: {count}</div>
+            ))}
+            <div>Total: <b>{parcelStats.total}</b></div>
+          </div>
+        )}
       </div>
 
     </main>

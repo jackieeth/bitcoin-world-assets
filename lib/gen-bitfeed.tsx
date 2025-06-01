@@ -755,12 +755,30 @@ export const genBitFeedMml = async (
   const blockWidth = Math.ceil(Math.sqrt(blockWeight));
   const mondrian = new MondrianLayout(blockWidth, blockWidth);
   let parcelsMML = "";
+  const parcelSizeCounts: { [key: number]: number } = {}; // Count each parcel size
 
   for (let i = 0; i < txList.length; i++) {
     const slot = mondrian.place(txList[i].size);
 
     if (slot) {
-      parcelsMML += `<m-cube id="parcel-${i}-size-${slot.r}" width="${slot.r * size * 0.9}" height="${platform_thickness * slot.r}" depth="${slot.r * size * 0.9}" x="${(slot.position.x + slot.r - blockWidth / 2) * size - margin * slot.r}" y="${(0.1 * slot.r) / 2}" z="${(slot.position.y + slot.r - blockWidth / 2) * size - margin * slot.r}" color="${parcelColor}">${Math.random() > 0.95 ? `<m-attr-anim attr="y" start="0.5" end="${0.5 + Math.floor(Math.random() * 7)}" start-time="2000" duration="${5000 + Math.floor(Math.random() * 5000)}" ping-pong="true" ping-pong-delay="1000"></m-attr-anim>` : ``} </m-cube>`;
+      // Tally count per parcel size
+      parcelSizeCounts[slot.r] = (parcelSizeCounts[slot.r] || 0) + 1;
+      
+      parcelsMML += `<m-cube id="parcel-${i}-size-${slot.r}" width="${
+        slot.r * size * 0.9
+      }" height="${platform_thickness * slot.r}" depth="${
+        slot.r * size * 0.9
+      }" x="${(slot.position.x + slot.r - blockWidth / 2) * size - margin * slot.r}" y="${(0.1 * slot.r) / 2}" z="${
+        (slot.position.y + slot.r - blockWidth / 2) * size - margin * slot.r
+      }" color="${parcelColor}">${
+        Math.random() > 0.95
+          ? `<m-attr-anim attr="y" start="0.5" end="${
+              0.5 + Math.floor(Math.random() * 7)
+            }" start-time="2000" duration="${
+              5000 + Math.floor(Math.random() * 5000)
+            }" ping-pong="true" ping-pong-delay="1000"></m-attr-anim>`
+          : ``
+      } </m-cube>`;
     }
   }
 
@@ -771,5 +789,5 @@ export const genBitFeedMml = async (
     },
   );
 
-  return { mmlFile: outputMml, blockWidth };
+  return { mmlFile: outputMml, blockWidth, parcelSizeCounts };
 };

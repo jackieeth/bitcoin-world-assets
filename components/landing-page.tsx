@@ -138,17 +138,17 @@ export function LandingPage({
               uncommonFloorPrice = Math.min(uncommonFloorPrice, item.price);
               if (blockNumber > 840000) continue; // Skip blocks after 840000
               let sattributes = "";
-              const sortedSatributes = item.mainSatoshi.sattributes.sort((a: any, b: any) =>
-                    a.slug.localeCompare(b.slug)
-                );
+              const sortedSatributes = item.mainSatoshi.sattributes.sort(
+                (a: any, b: any) => a.slug.localeCompare(b.slug),
+              );
               for (const sattribue of sortedSatributes) {
                 sattributes += sattribue.slug.toUpperCase() + " ";
               }
 
               if (sattributes.includes("INSCRIPTION")) {
-                continue
+                continue;
               }
-                // Only include uncommon sats
+              // Only include uncommon sats
               SatBlocks.push({
                 blockNumber: blockNumber,
                 satStash: item.mainSatoshi.rangeStart,
@@ -191,14 +191,14 @@ export function LandingPage({
               if (
                 item.rareSatsUtxo.satRanges[0].satributes.includes("Uncommon")
               ) {
-                const sortedSatributes = item.rareSatsUtxo.satRanges[0].satributes.sort((a: string, b: string) =>
-                    a.localeCompare(b)
-                );
+                const sortedSatributes =
+                  item.rareSatsUtxo.satRanges[0].satributes.sort(
+                    (a: string, b: string) => a.localeCompare(b),
+                  );
                 SatBlocks.push({
                   blockNumber: blockNumber,
                   satStash: item.rareSatsUtxo.satRanges[0].parentFrom,
-                  sattributes:
-                    sortedSatributes.join(" "),
+                  sattributes: sortedSatributes.join(" "),
                   priceSats: item.rareSatsUtxo.listedPrice,
                   blockTime: item.rareSatsUtxo.satRanges[0].blockInfo.blockTime,
                   listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
@@ -312,10 +312,13 @@ export function LandingPage({
       for (const item of filtered) {
         for (const satStash of item.ranges) {
           const blockNumber = satToBlock(satStash[0]);
+          const sortedSatributes = item.satributes.sort(
+            (a: string, b: string) => a.localeCompare(b),
+          );
           SatBlocks.push({
             blockNumber: blockNumber,
             satStash: satStash[0],
-            sattributes: item.satributes.join(" "),
+            sattributes: sortedSatributes.join(" "),
           });
         }
       }
@@ -402,19 +405,19 @@ export function LandingPage({
   return (
     <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <div className="mt-20 max-w-5xl space-y-6 transition-all duration-500">
-        <img
-            src={logoMH.src}
-            alt="Manhattan Logo"
-            className="block mx-auto w-32 h-32" 
-          />
+        <a href="/"><img
+          src={logoMH.src}
+          alt="Manhattan Logo"
+          className="block mx-auto w-32 h-32"
+        /></a>
         <div className="flex items-center justify-center">
-          
-          <img
-            src={btclogo.src}
-            alt="Bitcoin Logo"
-            className="w-12 h-12 mr-2" // adjust size and spacing as needed
-          />
           <a href="/">
+            {/* <img
+              src={btclogo.src}
+              alt="Bitcoin Logo"
+              className="w-12 h-12 mr-2" // adjust size and spacing as needed
+            /> */}
+
             <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">
               BITCOIN WORLD ASSETS
             </h1>
