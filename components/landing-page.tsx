@@ -98,6 +98,9 @@ export function LandingPage({
 
   useEffect(() => {
     if (window.location.pathname !== "/") return;
+    const ua = navigator.userAgent;
+    const isMobileSafari = /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
+    if (isMobileSafari) return;
 
     const fetchLatestListings = async () => {
       try {
@@ -202,6 +205,7 @@ export function LandingPage({
         }
         setUncommonFloorPrice(uncommonFloorPrice);
         setRareSats(SatBlocks);
+
         if (SatBlocks.length === 0) {
           setLoading(false);
           // setErrorMessage("No BWAs (<840k) found in the latest listings");
