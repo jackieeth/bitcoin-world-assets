@@ -126,7 +126,7 @@ export function LandingPage({
         try {
           // Fetch latest Magisat listings
           const resMagisat = await fetch(
-            `${process.env.NEXT_PUBLIC_LISTINGS_URI}/${unixToDate()}mg.json`,
+            `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getlistings?marketplace=mg&passcode=${process.env.NEXT_PUBLIC_QUARK20_API_LISTING_KEY}`,
             {
               method: "GET",
               headers: {
@@ -164,7 +164,7 @@ export function LandingPage({
         try {
           // Fetch latest ME listings
           const resMagicEden = await fetch(
-            `${process.env.NEXT_PUBLIC_LISTINGS_URI}/${unixToDate()}me.json`,
+            `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getlistings?marketplace=me&passcode=${process.env.NEXT_PUBLIC_QUARK20_API_LISTING_KEY}`,
             {
               method: "GET",
               headers: {
