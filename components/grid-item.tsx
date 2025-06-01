@@ -21,7 +21,7 @@ export function GridItem({ item, btcUsdPrice }: GridItemProps) {
   return (
     <div className="grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/30">
       <Link
-        href={item.priceSats && item.priceSats > 0 ? `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.sat}`:`/block/${item.block}`}
+        href={item.priceSats && item.priceSats > 0 ? `${item.listingUri}`:`/block/${item.block}`}
         className="block"
         target="_blank"
         rel="noopener noreferrer"

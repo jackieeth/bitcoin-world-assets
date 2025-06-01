@@ -9,8 +9,13 @@ import btclogo from "../styles/bitcoin-logo.png";
 import { getBlockImage } from "@/lib/gen-bitfeed";
 import { BlockVisualization } from "@/components/block-visualization";
 
-const MagicEdenUncommonSatsListingsUri =
-  process.env.NEXT_PUBLIC_MAGICEDEN_UNCOMMON_LISTINGS_URI;
+const unixToDate = () => {
+  const date = new Date();
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 interface LandingPageProps {
   onSearch: (query: string) => void;
@@ -34,6 +39,7 @@ export function LandingPage({
       sattributes: string;
       priceSats?: number;
       blockTime?: string;
+      listingUri?: string;
     }[]
   >([]);
   const [loading, setLoading] = useState(false);
@@ -111,49 +117,97 @@ export function LandingPage({
         console.error("Error fetching latest block or price:", error);
       }
       try {
-        const res = await fetch(`${MagicEdenUncommonSatsListingsUri}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include"
-        }).then((d) => d.json());
+        const SatBlocks: any = [];
+        let uncommonFloorPrice: number = 1e9;
 
-        const data = res["tokens"];
-        if (data) {
-          const SatBlocks: any = [];
-          let uncommonFloorPrice: number = 1e9;
-          for (const item of data) {
-            const blockNumber = satToBlock(
-              item.rareSatsUtxo.satRanges[0].parentFrom,
-            );
-            uncommonFloorPrice = Math.min(
-              uncommonFloorPrice,
-              item.rareSatsUtxo.listedPrice,
-            );
-            if (blockNumber > 840000) continue; // Skip blocks after 840000
-            if (
-              item.rareSatsUtxo.satRanges[0].satributes.includes("Uncommon")
-            ) {
+        try {
+          // Fetch latest Magisat listings
+          const resMagisat = await fetch(
+            `${process.env.NEXT_PUBLIC_LISTINGS_URI}/${unixToDate()}mg.json`,
+            {
+              method: "GET",
+              headers: {
+                accept: "application/json",
+              }
+            },
+          ).then((d) => d.json());
+
+          const dataMagi = resMagisat["listings"];
+
+          if (dataMagi) {
+            for (const item of dataMagi) {
+              const blockNumber = item.mainSatoshi.blockNumber;
+              uncommonFloorPrice = Math.min(uncommonFloorPrice, item.price);
+              if (blockNumber > 840000) continue; // Skip blocks after 840000
+              let sattributes = "";
+              for (const sattribue of item.mainSatoshi.sattributes) {
+                sattributes += sattribue.slug.toUpperCase() + " ";
+              }
+
               SatBlocks.push({
                 blockNumber: blockNumber,
-                satStash: item.rareSatsUtxo.satRanges[0].parentFrom,
-                sattributes:
-                  item.rareSatsUtxo.satRanges[0].satributes.join(" "),
-                priceSats: item.rareSatsUtxo.listedPrice,
-                blockTime: item.rareSatsUtxo.satRanges[0].blockInfo.blockTime,
+                satStash: item.mainSatoshi.rangeStart,
+                sattributes: sattributes.trim(),
+                priceSats: item.price,
+                blockTime: item.mainSatoshi.blockTimestamp,
+                listingUri: `https://magisat.io/listing/${item.id}`,
               });
             }
           }
-          setUncommonFloorPrice(uncommonFloorPrice);
-          setRareSats(SatBlocks);
-          if (SatBlocks.length === 0) {
-            setLoading(false);
-            setErrorMessage("No BWAs (<840k) found in the latest listings");
-          } else {
-            setShowListings(true);
-            setErrorMessage(null); // Clear error if successful
+        } catch (error) {
+          console.error("Error fetching latest listings from Magisat:", error);
+        }
+
+        try {
+          // Fetch latest ME listings
+          const resMagicEden = await fetch(
+            `${process.env.NEXT_PUBLIC_LISTINGS_URI}/${unixToDate()}me.json`,
+            {
+              method: "GET",
+              headers: {
+                accept: "application/json",
+              },
+            },
+          ).then((d) => d.json());
+
+          const dataME = resMagicEden["listings"];
+          
+          if (dataME) {
+            for (const item of dataME) {
+              const blockNumber = satToBlock(
+                item.rareSatsUtxo.satRanges[0].parentFrom,
+              );
+              uncommonFloorPrice = Math.min(
+                uncommonFloorPrice,
+                item.rareSatsUtxo.listedPrice,
+              );
+              if (blockNumber > 840000) continue; // Skip blocks after 840000
+              if (
+                item.rareSatsUtxo.satRanges[0].satributes.includes("Uncommon")
+              ) {
+                SatBlocks.push({
+                  blockNumber: blockNumber,
+                  satStash: item.rareSatsUtxo.satRanges[0].parentFrom,
+                  sattributes:
+                    item.rareSatsUtxo.satRanges[0].satributes.join(" "),
+                  priceSats: item.rareSatsUtxo.listedPrice,
+                  blockTime: item.rareSatsUtxo.satRanges[0].blockInfo.blockTime,
+                  listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
+                });
+              }
+            }
           }
+        } catch (error) {
+          console.error("Error fetching latest listings from ME:", error);
+        }
+        setUncommonFloorPrice(uncommonFloorPrice);
+        setRareSats(SatBlocks);
+        if (SatBlocks.length === 0) {
+          setLoading(false);
+          // setErrorMessage("No BWAs (<840k) found in the latest listings");
+        } else {
+          setShowListings(true);
+          setErrorMessage(null); // Clear error if successful
         }
       } catch (error) {
         console.error("Error fetching latest listings:", error);
@@ -310,6 +364,7 @@ export function LandingPage({
             priceSats: sat.priceSats || 0,
             showListings: showListings,
             blockTime: sat.blockTime || "",
+            listingUri: sat.listingUri || "",
           })),
         );
         setAwaitGalleryItems(items.sort((a, b) => a.sat - b.sat));
@@ -377,7 +432,7 @@ export function LandingPage({
           </small>
           <br />
           <br />
-          {btcBlockHeight && uncommonFloorPrice && btcUsdPrice && (
+          {showListings && btcBlockHeight && uncommonFloorPrice && btcUsdPrice && (
             <small>
               Total: {btcBlockHeight} BWAs, Floor: $
               {Math.floor((uncommonFloorPrice * btcUsdPrice) / 10000000) / 10},
@@ -440,7 +495,7 @@ export function LandingPage({
             />
           )
         )}
-        {errorMessage && (
+        {true && errorMessage && (
           <div className="text-white-500 mb-4">{errorMessage}</div>
         )}
       </div>

@@ -19,6 +19,7 @@ export type Item = {
   priceSats: number;
   showListings: boolean;
   blockTime?: string; // Optional field for block time
+  listingUri?: string; // Optional field for listing URI
   // ntx: number;
 };
 
@@ -128,7 +129,7 @@ export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListin
       ) : (
         <div>
         <div className="flex items-center justify-center border border-white/10 text-white/60 mb-4">
-          {items.length > 1 ? `${items.length} Bitcoin World Assets` : `1 Bitcoin World Asset`} {showListings ? 'listed around the floor in Magic Eden':' found'}
+          {items.length > 1 ? `${items.length} Bitcoin World Assets` : `1 Bitcoin World Asset`} {showListings ? 'found at marketplaces':' found'}
         </div>
         <div className={gridClasses}>
           
