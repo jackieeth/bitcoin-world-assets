@@ -58,6 +58,7 @@ export function LandingPage({
   const [btcUsdPrice, setBtcUsdPrice] = useState<number | null>(null);
   const [btcBlockHeight, setBtcBlockHeight] = useState<number | null>(null);
   const [showListings, setShowListings] = useState(false);
+  const [listingsFetched, setListingsFetched] = useState(false);
 
   // Focus the input field when the component mounts
   useEffect(() => {
@@ -202,6 +203,7 @@ export function LandingPage({
         }
         setUncommonFloorPrice(uncommonFloorPrice);
         setRareSats(SatBlocks);
+        setListingsFetched(true);
         if (SatBlocks.length === 0) {
           setLoading(false);
           // setErrorMessage("No BWAs (<840k) found in the latest listings");
@@ -346,7 +348,7 @@ export function LandingPage({
   // Transform rareSats into the Item type
   useEffect(() => {
     const fetchGalleryItems = async () => {
-      if (rareSats.length === 0) return;
+      if (!listingsFetched || rareSats.length === 0) return;
       try {
         const items = await Promise.all(
           rareSats.map(async (sat, index) => ({
@@ -377,7 +379,7 @@ export function LandingPage({
     };
 
     fetchGalleryItems();
-  }, [rareSats]);
+  }, [rareSats, listingsFetched]);
 
   // Handler for input click
   const handleInputClick = () => {
