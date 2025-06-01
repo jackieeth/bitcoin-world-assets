@@ -867,7 +867,7 @@ export const genBitFeedMml = async (
   let parcelsMML = "";
   const parcelSizeCounts: { [key: number]: number } = {}; // Count each parcel size
   let placeModel = true;
-  const modelWillAppear = Math.random() > 0; // Randomly decide if a model will appear
+  const modelWillAppear = Math.random() > 0.7; // Randomly decide if a model will appear
 
   for (let i = 0; i < txList.length; i++) {
     const slot = mondrian.place(txList[i].size);
