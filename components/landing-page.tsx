@@ -8,14 +8,7 @@ import { Gallery, Item } from "@/components/gallery";
 import btclogo from "../styles/bitcoin-logo.png";
 import { getBlockImage } from "@/lib/gen-bitfeed";
 import { BlockVisualization } from "@/components/block-visualization";
-
-const unixToDate = () => {
-  const date = new Date();
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+import logoMH from "../styles/manh.png";
 
 interface LandingPageProps {
   onSearch: (query: string) => void;
@@ -409,7 +402,13 @@ export function LandingPage({
   return (
     <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <div className="mt-20 max-w-5xl space-y-6 transition-all duration-500">
+        <img
+            src={logoMH.src}
+            alt="Manhattan Logo"
+            className="block mx-auto w-32 h-32" 
+          />
         <div className="flex items-center justify-center">
+          
           <img
             src={btclogo.src}
             alt="Bitcoin Logo"
