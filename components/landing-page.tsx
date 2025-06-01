@@ -145,10 +145,17 @@ export function LandingPage({
               uncommonFloorPrice = Math.min(uncommonFloorPrice, item.price);
               if (blockNumber > 840000) continue; // Skip blocks after 840000
               let sattributes = "";
-              for (const sattribue of item.mainSatoshi.sattributes) {
+              const sortedSatributes = item.mainSatoshi.sattributes.sort((a: any, b: any) =>
+                    a.slug.localeCompare(b.slug)
+                );
+              for (const sattribue of sortedSatributes) {
                 sattributes += sattribue.slug.toUpperCase() + " ";
               }
 
+              if (sattributes.includes("INSCRIPTION")) {
+                continue
+              }
+                // Only include uncommon sats
               SatBlocks.push({
                 blockNumber: blockNumber,
                 satStash: item.mainSatoshi.rangeStart,
@@ -191,11 +198,14 @@ export function LandingPage({
               if (
                 item.rareSatsUtxo.satRanges[0].satributes.includes("Uncommon")
               ) {
+                const sortedSatributes = item.rareSatsUtxo.satRanges[0].satributes.sort((a: string, b: string) =>
+                    a.localeCompare(b)
+                );
                 SatBlocks.push({
                   blockNumber: blockNumber,
                   satStash: item.rareSatsUtxo.satRanges[0].parentFrom,
                   sattributes:
-                    item.rareSatsUtxo.satRanges[0].satributes.join(" "),
+                    sortedSatributes.join(" "),
                   priceSats: item.rareSatsUtxo.listedPrice,
                   blockTime: item.rareSatsUtxo.satRanges[0].blockInfo.blockTime,
                   listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
@@ -448,7 +458,7 @@ export function LandingPage({
               <small>
                 Total: {btcBlockHeight} BWAs, Floor: $
                 {Math.floor((uncommonFloorPrice * btcUsdPrice) / 10000000) / 10}
-                , MCap: $
+                , MarketCap: $
                 {Math.floor(
                   (((uncommonFloorPrice * btcUsdPrice) / 100000000) *
                     btcBlockHeight) /

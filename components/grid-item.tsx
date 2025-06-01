@@ -19,7 +19,7 @@ function extractYearMonth(dateString: string) {
 
 export function GridItem({ item, btcUsdPrice }: GridItemProps) {
   return (
-    <div className={item.description.includes("ALPHA") ? "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-lg transition-all hover:border-white/30" : "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/30"}>
+    <div className={item.description.includes("ALPHA") ? "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-lg transition-all hover:border-white/50" : "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/50"}>
       
         <div className="aspect-square relative overflow-hidden">
           <Image
