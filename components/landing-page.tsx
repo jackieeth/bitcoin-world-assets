@@ -58,7 +58,6 @@ export function LandingPage({
   const [btcUsdPrice, setBtcUsdPrice] = useState<number | null>(null);
   const [btcBlockHeight, setBtcBlockHeight] = useState<number | null>(null);
   const [showListings, setShowListings] = useState(false);
-  const [listingsFetched, setListingsFetched] = useState(false);
 
   // Focus the input field when the component mounts
   useEffect(() => {
@@ -99,6 +98,9 @@ export function LandingPage({
 
   useEffect(() => {
     if (window.location.pathname !== "/") return;
+    const ua = navigator.userAgent;
+    const isMobileSafari = /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
+    if (isMobileSafari) return;
 
     const fetchLatestListings = async () => {
       try {
@@ -203,7 +205,7 @@ export function LandingPage({
         }
         setUncommonFloorPrice(uncommonFloorPrice);
         setRareSats(SatBlocks);
-        setListingsFetched(true);
+
         if (SatBlocks.length === 0) {
           setLoading(false);
           // setErrorMessage("No BWAs (<840k) found in the latest listings");
@@ -281,11 +283,7 @@ export function LandingPage({
 
     setSearchQuery(pasteData);
     setJustPasted(true);
-    const ua = navigator.userAgent;
-    const isMobileSafari = /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
-    if (!isMobileSafari) {
-        window.history.replaceState(null, "", `/address/${pasteData}`);
-    }
+    window.history.replaceState(null, "", `/address/${pasteData}`);
     setLoading(true);
     try {
       const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
@@ -298,7 +296,9 @@ export function LandingPage({
       const filtered = response.filter((item: any) =>
         item.satributes.some(
           (attribute: string) =>
-            ["UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"].includes(attribute),
+            ["UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"].includes(
+              attribute,
+            ), //add full Rodarmor Rarity list
         ),
       );
       const SatBlocks = [];
@@ -327,7 +327,7 @@ export function LandingPage({
             "Content-Type": "application/x-www-form-urlencoded",
           };
           const body = new URLSearchParams(payload).toString();
-          await fetch(
+          const res = await fetch(
             `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/postowner`,
             {
               method: "POST",
@@ -350,7 +350,7 @@ export function LandingPage({
   // Transform rareSats into the Item type
   useEffect(() => {
     const fetchGalleryItems = async () => {
-      if (!listingsFetched || rareSats.length === 0) return;
+      if (rareSats.length === 0) return;
       try {
         const items = await Promise.all(
           rareSats.map(async (sat, index) => ({
@@ -381,7 +381,7 @@ export function LandingPage({
     };
 
     fetchGalleryItems();
-  }, [rareSats, listingsFetched]);
+  }, [rareSats]);
 
   // Handler for input click
   const handleInputClick = () => {
