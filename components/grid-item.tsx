@@ -19,13 +19,8 @@ function extractYearMonth(dateString: string) {
 
 export function GridItem({ item, btcUsdPrice }: GridItemProps) {
   return (
-    <div className="grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/30">
-      <Link
-        href={item.priceSats && item.priceSats > 0 ? `${item.listingUri}`:`/block/${item.block}`}
-        className="block"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+    <div className={item.description.includes("ALPHA") ? "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-lg transition-all hover:border-white/30" : "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/30"}>
+      
         <div className="aspect-square relative overflow-hidden">
           <Image
             src={item.image}
@@ -37,17 +32,26 @@ export function GridItem({ item, btcUsdPrice }: GridItemProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
         <div className="p-4 bg-black/40">
+        
           <h3 className="text-sm font-bold uppercase tracking-wider">
-            {item.title}
+            <Link
+        href={`/block/${item.block}`}
+        className="block hover:underline"
+        target="_blank"
+        rel="noopener noreferrer"
+      >{item.title}</Link>
           </h3>
           <p className="mt-1 text-xs text-white/70">
-            {item.description}{item.blockTime ? <small style={{color:"gray"}}>{" " + extractYearMonth(item.blockTime)+""}</small> : ""}
-            <br />
+            {item.description}{item.blockTime ? <small style={{color:"gray"}}>{" " + extractYearMonth(item.blockTime)+""}</small> : ""}<br/>
             <small style={{color:"gray"}}>SAT #{item.sat}</small>
-            {btcUsdPrice && item.priceSats > 0 && <b><br/>{item.priceSats} sats (<span style={{fontSize: "1.2em"}}>~$</span>{Math.ceil(item.priceSats * btcUsdPrice/100000000)})</b>}
+            {btcUsdPrice && item.priceSats > 0 && <Link
+        href={`${item.listingUri}`}
+        className="block hover:underline"
+        target="_blank"
+        rel="noopener noreferrer"
+      ><b><br/>{item.priceSats} sats (<span style={{fontSize: "1.2em"}}>~$</span>{Math.ceil(item.priceSats * btcUsdPrice/100000000)})</b></Link>}
           </p>
         </div>
-      </Link>
     </div>
   );
 }

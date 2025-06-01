@@ -40,6 +40,7 @@ export function LandingPage({
       priceSats?: number;
       blockTime?: string;
       listingUri?: string;
+      listedOn?: string;
     }[]
   >([]);
   const [loading, setLoading] = useState(false);
@@ -99,7 +100,8 @@ export function LandingPage({
   useEffect(() => {
     if (window.location.pathname !== "/") return;
     const ua = navigator.userAgent;
-    const isMobileSafari = /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
+    const isMobileSafari =
+      /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
     if (isMobileSafari) return;
 
     const fetchLatestListings = async () => {
@@ -131,7 +133,7 @@ export function LandingPage({
               method: "GET",
               headers: {
                 accept: "application/json",
-              }
+              },
             },
           ).then((d) => d.json());
 
@@ -154,6 +156,7 @@ export function LandingPage({
                 priceSats: item.price,
                 blockTime: item.mainSatoshi.blockTimestamp,
                 listingUri: `https://magisat.io/listing/${item.id}`,
+                listedOn: "Magisat",
               });
             }
           }
@@ -174,7 +177,7 @@ export function LandingPage({
           ).then((d) => d.json());
 
           const dataME = resMagicEden["listings"];
-          
+
           if (dataME) {
             for (const item of dataME) {
               const blockNumber = satToBlock(
@@ -196,6 +199,7 @@ export function LandingPage({
                   priceSats: item.rareSatsUtxo.listedPrice,
                   blockTime: item.rareSatsUtxo.satRanges[0].blockInfo.blockTime,
                   listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
+                  listedOn: "MagicEden",
                 });
               }
             }
@@ -369,6 +373,7 @@ export function LandingPage({
             showListings: showListings,
             blockTime: sat.blockTime || "",
             listingUri: sat.listingUri || "",
+            listedOn: sat.listedOn || "",
           })),
         );
         setAwaitGalleryItems(items.sort((a, b) => a.sat - b.sat));
@@ -436,19 +441,22 @@ export function LandingPage({
           </small>
           <br />
           <br />
-          {showListings && btcBlockHeight && uncommonFloorPrice && btcUsdPrice && (
-            <small>
-              Total: {btcBlockHeight} BWAs, Floor: $
-              {Math.floor((uncommonFloorPrice * btcUsdPrice) / 10000000) / 10},
-              MCap: $
-              {Math.floor(
-                (((uncommonFloorPrice * btcUsdPrice) / 100000000) *
-                  btcBlockHeight) /
-                  100000,
-              ) / 10}
-              M<br />
-            </small>
-          )}
+          {showListings &&
+            btcBlockHeight &&
+            uncommonFloorPrice &&
+            btcUsdPrice && (
+              <small>
+                Total: {btcBlockHeight} BWAs, Floor: $
+                {Math.floor((uncommonFloorPrice * btcUsdPrice) / 10000000) / 10}
+                , MCap: $
+                {Math.floor(
+                  (((uncommonFloorPrice * btcUsdPrice) / 100000000) *
+                    btcBlockHeight) /
+                    100000,
+                ) / 10}
+                M<br />
+              </small>
+            )}
         </p>
 
         <form className="mx-auto flex w-full max-w-3xl items-center space-x-2">
