@@ -281,7 +281,11 @@ export function LandingPage({
 
     setSearchQuery(pasteData);
     setJustPasted(true);
-    window.history.replaceState(null, "", `/address/${pasteData}`);
+    const ua = navigator.userAgent;
+    const isMobileSafari = /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
+    if (!isMobileSafari) {
+        window.history.replaceState(null, "", `/address/${pasteData}`);
+    }
     setLoading(true);
     try {
       const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
@@ -294,9 +298,7 @@ export function LandingPage({
       const filtered = response.filter((item: any) =>
         item.satributes.some(
           (attribute: string) =>
-            ["UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"].includes(
-              attribute,
-            ), //add full Rodarmor Rarity list
+            ["UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"].includes(attribute),
         ),
       );
       const SatBlocks = [];
@@ -325,7 +327,7 @@ export function LandingPage({
             "Content-Type": "application/x-www-form-urlencoded",
           };
           const body = new URLSearchParams(payload).toString();
-          const res = await fetch(
+          await fetch(
             `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/postowner`,
             {
               method: "POST",
