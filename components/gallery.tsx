@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { GridItem } from "@/components/grid-item";
 import { GalleryControls } from "@/components/gallery-controls";
 import { generateItems } from "@/lib/data";
+import { set } from "react-hook-form";
 
 // Define the item type
 export type Item = {
@@ -15,6 +16,10 @@ export type Item = {
   date: string;
   sat: number;
   block: number;
+  priceSats: number;
+  showListings: boolean;
+  blockTime?: string; // Optional field for block time
+  listingUri?: string; // Optional field for listing URI
   // ntx: number;
 };
 
@@ -30,12 +35,15 @@ export type SortOption = "newest" | "oldest"; // | "title"
 interface GalleryProps {
   initialFilter?: string;
   itemsData: Item[]; // Add this prop to accept external data
+  btcUsdPrice?: number; // Optional prop for BTC/USD price
+  showListings?: boolean; // Optional prop to control listing display
 }
 
-export function Gallery({ initialFilter = "", itemsData }: GalleryProps) {
+export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListings }: GalleryProps) {
   // State for items and filtered items
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+  
 
   // State for filters and sorting
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -117,18 +125,16 @@ export function Gallery({ initialFilter = "", itemsData }: GalleryProps) {
       /> */}
 
       {items.length === 0 ? (
-        <div className="flex h-40 items-center justify-center border border-white/10 text-white/60">
-          No plots found.
-        </div>
+        <div/>
       ) : (
         <div>
         <div className="flex items-center justify-center border border-white/10 text-white/60 mb-4">
-          {items.length > 1 ? `${items.length} Bitcoin World Assets found` : `1 Bitcoin World Asset found`}.
+          {items.length > 1 ? `${items.length} Bitcoin World Assets` : `1 Bitcoin World Asset`} {showListings ? 'found at marketplaces':' found'}
         </div>
         <div className={gridClasses}>
           
           {items.map((item) => (
-            <GridItem key={item.id} item={item} />
+            <GridItem key={item.id} item={item} btcUsdPrice={btcUsdPrice}/>
           ))}
         </div></div>
       )}

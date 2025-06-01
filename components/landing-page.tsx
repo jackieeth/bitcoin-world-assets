@@ -9,6 +9,14 @@ import btclogo from "../styles/bitcoin-logo.png";
 import { getBlockImage } from "@/lib/gen-bitfeed";
 import { BlockVisualization } from "@/components/block-visualization";
 
+const unixToDate = () => {
+  const date = new Date();
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 interface LandingPageProps {
   onSearch: (query: string) => void;
   initialSearchQuery?: string;
@@ -25,7 +33,14 @@ export function LandingPage({
 }: LandingPageProps) {
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery || "");
   const [rareSats, setRareSats] = useState<
-    { blockNumber: number; satStash: number; sattributes: string }[]
+    {
+      blockNumber: number;
+      satStash: number;
+      sattributes: string;
+      priceSats?: number;
+      blockTime?: string;
+      listingUri?: string;
+    }[]
   >([]);
   const [loading, setLoading] = useState(false);
   const [awaitGalleryItems, setAwaitGalleryItems] = useState<Item[]>([]);
@@ -37,6 +52,12 @@ export function LandingPage({
   const [latestHolders, setLatestHolders] = useState<
     { address: string; satDataLength: number; lastUpdate: number }[]
   >([]);
+  const [uncommonFloorPrice, setUncommonFloorPrice] = useState<number | null>(
+    null,
+  );
+  const [btcUsdPrice, setBtcUsdPrice] = useState<number | null>(null);
+  const [btcBlockHeight, setBtcBlockHeight] = useState<number | null>(null);
+  const [showListings, setShowListings] = useState(false);
 
   // Focus the input field when the component mounts
   useEffect(() => {
@@ -45,19 +66,24 @@ export function LandingPage({
     }
   }, []);
 
-  // Fetch latest holders on component mount
+  //Fetch latest holders on component mount
   useEffect(() => {
     const fetchLatestHolders = async () => {
       try {
-        const payload:any = { passcode: process.env.NEXT_PUBLIC_QUARK20_API_KEY };
-          const headers = { "Content-Type": "application/x-www-form-urlencoded" };
-          const body = new URLSearchParams(payload).toString();
-          const res = await fetch(`${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getblockleaders`, {
+        const payload: any = {
+          passcode: process.env.NEXT_PUBLIC_QUARK20_API_KEY,
+        };
+        const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+        const body = new URLSearchParams(payload).toString();
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getblockleaders`,
+          {
             method: "POST",
             headers: headers,
             body: body,
-          }).then((d) => d.json());
-    
+          },
+        ).then((d) => d.json());
+
         const data = res["data"];
         if (data) {
           setLatestHolders(data); // Get the latest 5 holders
@@ -68,6 +94,127 @@ export function LandingPage({
     };
 
     fetchLatestHolders();
+  }, []);
+
+  useEffect(() => {
+    if (window.location.pathname !== "/") return;
+
+    const fetchLatestListings = async () => {
+      try {
+        // get latest btc block and price from mempool.space api
+        const latestBlockResponse = await fetch(
+          "https://mempool.space/api/v1/blocks/tip/height",
+        );
+        const latestBlock = await latestBlockResponse.text();
+        setBtcBlockHeight(Number(latestBlock));
+
+        const latestBTCPriceResponse = await fetch(
+          "https://mempool.space/api/v1/prices",
+        );
+        const latestBTCPrice = await latestBTCPriceResponse.json();
+        setBtcUsdPrice(latestBTCPrice["USD"]);
+      } catch (error) {
+        console.error("Error fetching latest block or price:", error);
+      }
+      try {
+        const SatBlocks: any = [];
+        let uncommonFloorPrice: number = 1e9;
+
+        try {
+          // Fetch latest Magisat listings
+          const resMagisat = await fetch(
+            `${process.env.NEXT_PUBLIC_LISTINGS_URI}/${unixToDate()}mg.json`,
+            {
+              method: "GET",
+              headers: {
+                accept: "application/json",
+              }
+            },
+          ).then((d) => d.json());
+
+          const dataMagi = resMagisat["listings"];
+
+          if (dataMagi) {
+            for (const item of dataMagi) {
+              const blockNumber = item.mainSatoshi.blockNumber;
+              uncommonFloorPrice = Math.min(uncommonFloorPrice, item.price);
+              if (blockNumber > 840000) continue; // Skip blocks after 840000
+              let sattributes = "";
+              for (const sattribue of item.mainSatoshi.sattributes) {
+                sattributes += sattribue.slug.toUpperCase() + " ";
+              }
+
+              SatBlocks.push({
+                blockNumber: blockNumber,
+                satStash: item.mainSatoshi.rangeStart,
+                sattributes: sattributes.trim(),
+                priceSats: item.price,
+                blockTime: item.mainSatoshi.blockTimestamp,
+                listingUri: `https://magisat.io/listing/${item.id}`,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching latest listings from Magisat:", error);
+        }
+
+        try {
+          // Fetch latest ME listings
+          const resMagicEden = await fetch(
+            `${process.env.NEXT_PUBLIC_LISTINGS_URI}/${unixToDate()}me.json`,
+            {
+              method: "GET",
+              headers: {
+                accept: "application/json",
+              },
+            },
+          ).then((d) => d.json());
+
+          const dataME = resMagicEden["listings"];
+          
+          if (dataME) {
+            for (const item of dataME) {
+              const blockNumber = satToBlock(
+                item.rareSatsUtxo.satRanges[0].parentFrom,
+              );
+              uncommonFloorPrice = Math.min(
+                uncommonFloorPrice,
+                item.rareSatsUtxo.listedPrice,
+              );
+              if (blockNumber > 840000) continue; // Skip blocks after 840000
+              if (
+                item.rareSatsUtxo.satRanges[0].satributes.includes("Uncommon")
+              ) {
+                SatBlocks.push({
+                  blockNumber: blockNumber,
+                  satStash: item.rareSatsUtxo.satRanges[0].parentFrom,
+                  sattributes:
+                    item.rareSatsUtxo.satRanges[0].satributes.join(" "),
+                  priceSats: item.rareSatsUtxo.listedPrice,
+                  blockTime: item.rareSatsUtxo.satRanges[0].blockInfo.blockTime,
+                  listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching latest listings from ME:", error);
+        }
+        setUncommonFloorPrice(uncommonFloorPrice);
+        setRareSats(SatBlocks);
+        if (SatBlocks.length === 0) {
+          setLoading(false);
+          // setErrorMessage("No BWAs (<840k) found in the latest listings");
+        } else {
+          setShowListings(true);
+          setErrorMessage(null); // Clear error if successful
+        }
+      } catch (error) {
+        console.error("Error fetching latest listings:", error);
+      }
+    };
+
+    fetchLatestListings();
   }, []);
 
   // If an initial address is provided, simulate paste handling on mount only once
@@ -143,9 +290,12 @@ export function LandingPage({
       });
 
       const filtered = response.filter((item: any) =>
-        item.satributes.some((attribute: string) =>
-          ["UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"].includes(attribute) //add full Rodarmor Rarity list
-        )
+        item.satributes.some(
+          (attribute: string) =>
+            ["UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"].includes(
+              attribute,
+            ), //add full Rodarmor Rarity list
+        ),
       );
       const SatBlocks = [];
       for (const item of filtered) {
@@ -164,17 +314,24 @@ export function LandingPage({
         setErrorMessage("No BWAs found in this BTC address");
       } else {
         try {
-          const payload:any = { passcode: process.env.NEXT_PUBLIC_QUARK20_API_KEY , satData: JSON.stringify(SatBlocks), ownerAddress: pasteData };
-          const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+          const payload: any = {
+            passcode: process.env.NEXT_PUBLIC_QUARK20_API_KEY,
+            satData: JSON.stringify(SatBlocks),
+            ownerAddress: pasteData,
+          };
+          const headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+          };
           const body = new URLSearchParams(payload).toString();
-          const res = await fetch(`${process.env.NEXT_PUBLIC_QUARK20_API_URL}/postowner`, {
-            method: "POST",
-            headers: headers,
-            body: body,
-          }).then((d) => d.json());
-        } catch (error) {
-          
-        }
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/postowner`,
+            {
+              method: "POST",
+              headers: headers,
+              body: body,
+            },
+          ).then((d) => d.json());
+        } catch (error) {}
         setErrorMessage(null); // Clear error if successful
       }
     } catch (error: any) {
@@ -195,16 +352,20 @@ export function LandingPage({
           rareSats.map(async (sat, index) => ({
             id: index,
             title: `Block ${sat.blockNumber}`,
-            description: `${sat.sattributes}`,
+            description: `${sat.sattributes.toUpperCase()}`,
             category: "rare-sats",
             block: sat.blockNumber,
             image: await getBlockImage(
               Number(sat.blockNumber),
-              process.env.NEXT_PUBLIC_BLOCKIMAGE_URL || ""
+              process.env.NEXT_PUBLIC_BLOCKIMAGE_URL || "",
             ),
             sat: Number(sat.satStash),
             date: new Date().toISOString(),
-          }))
+            priceSats: sat.priceSats || 0,
+            showListings: showListings,
+            blockTime: sat.blockTime || "",
+            listingUri: sat.listingUri || "",
+          })),
         );
         setAwaitGalleryItems(items.sort((a, b) => a.sat - b.sat));
       } catch (error) {
@@ -230,26 +391,28 @@ export function LandingPage({
     <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <div className="mt-20 max-w-5xl space-y-6 transition-all duration-500">
         <div className="flex items-center justify-center">
-          
           <img
             src={btclogo.src}
             alt="Bitcoin Logo"
             className="w-12 h-12 mr-2" // adjust size and spacing as needed
-          /><a href="/">
-          <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">
-            BITCOIN WORLD ASSETS
-          </h1></a>
+          />
+          <a href="/">
+            <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">
+              BITCOIN WORLD ASSETS
+            </h1>
+          </a>
         </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
           IMMUTABLE DIGITAL WORLD REAL ESTATE
           <br />
           <br />
           <small>
-            Bitcoin World Assets (BWAs) are the <i>root</i> digital world real estate assets natively born
-            with each block of Bitcoin. BWAs are the 1st Satoshi (Uncommon
-            Sats) of the BTC BLOCKS based on a tradition that early BTC miners
-            used the 1st satoshis to represent BTC blocks for record-keeping. BWAs
-            can be found as "Uncommon Sats" at marketplaces (e.g.,{" "}
+            Bitcoin World Assets (BWAs) are the <i>root</i> digital world real
+            estate assets natively born with each block of Bitcoin. BWAs are the
+            1st Satoshi (Uncommon Sats) of the BTC BLOCKS based on a tradition
+            that early BTC miners used the 1st satoshis to represent BTC blocks
+            for record-keeping. BWAs can be found as "Uncommon Sats" at
+            marketplaces (e.g.,{" "}
             <a
               style={{ textDecoration: "underline" }}
               href={`https://magiceden.us/ordinals/marketplace/rare-sats`}
@@ -267,6 +430,21 @@ export function LandingPage({
             </a>
             ...). How many do you own?
           </small>
+          <br />
+          <br />
+          {showListings && btcBlockHeight && uncommonFloorPrice && btcUsdPrice && (
+            <small>
+              Total: {btcBlockHeight} BWAs, Floor: $
+              {Math.floor((uncommonFloorPrice * btcUsdPrice) / 10000000) / 10},
+              MCap: $
+              {Math.floor(
+                (((uncommonFloorPrice * btcUsdPrice) / 100000000) *
+                  btcBlockHeight) /
+                  100000,
+              ) / 10}
+              M<br />
+            </small>
+          )}
         </p>
 
         <form className="mx-auto flex w-full max-w-3xl items-center space-x-2">
@@ -309,27 +487,37 @@ export function LandingPage({
             </svg>
           </div>
         ) : (
-          rareSats.length > 0 && <Gallery itemsData={awaitGalleryItems} />
+          rareSats.length > 0 && (
+            <Gallery
+              itemsData={awaitGalleryItems}
+              btcUsdPrice={btcUsdPrice ?? undefined}
+              showListings={showListings}
+            />
+          )
         )}
-        {errorMessage && (
+        {true && errorMessage && (
           <div className="text-white-500 mb-4">{errorMessage}</div>
         )}
       </div>
 
-   {latestHolders.length > 0 ? (
-    <div className="text-gray-300 mt-8">- Latest BWA holders -<br/>
+      {latestHolders.length > 0 ? (
+        <div className="text-gray-300 mt-8">
+          - Latest BWA holders -<br />
           {latestHolders.map((holder, index) => (
             <small key={`b-${index}`}>
-                <a href={`/address/${holder.address}`}>{shortenString(holder.address)}</a>
-                
-                  {`: `}{holder.satDataLength}<br/>
-                
-              </small>
-            ))}
-          </div>
-        ) : (
-          <div className="text-gray-300 mt-8">Loading latest holders...</div>
-        )}
+              <a href={`/address/${holder.address}`}>
+                {shortenString(holder.address)}
+              </a>
+
+              {`: `}
+              {holder.satDataLength}
+              <br />
+            </small>
+          ))}
+        </div>
+      ) : (
+        <div className="text-gray-300 mt-8">Loading...</div>
+      )}
 
       {/* 3D Block Visualization Section */}
       <BlockVisualization blockHeight={518357} />
