@@ -201,7 +201,8 @@ export function LandingPage({
                   sattributes: sortedSatributes.join(" "),
                   priceSats: item.rareSatsUtxo.listedPrice,
                   blockTime: item.rareSatsUtxo.satRanges[0].blockInfo.blockTime,
-                  listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
+                  // listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
+                  listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats`,
                   listedOn: "MagicEden",
                 });
               }
