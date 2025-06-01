@@ -316,6 +316,12 @@ export function processXMLNode(node: any, parent: any) {
     loader.load(
         modelData.src,
         (gltf) => {
+            gltf.scene.traverse((child) => {
+                if ((child as THREE.Mesh).isMesh) {
+                    (child as THREE.Mesh).castShadow = true;
+                    (child as THREE.Mesh).receiveShadow = true;
+                }
+            });
             modelGroup.add(gltf.scene);
         },
         undefined,
@@ -861,7 +867,7 @@ export const genBitFeedMml = async (
   let parcelsMML = "";
   const parcelSizeCounts: { [key: number]: number } = {}; // Count each parcel size
   let placeModel = true;
-  const modelWillAppear = Math.random() > 0.7; // Randomly decide if a model will appear
+  const modelWillAppear = Math.random() > 0; // Randomly decide if a model will appear
 
   for (let i = 0; i < txList.length; i++) {
     const slot = mondrian.place(txList[i].size);
@@ -884,7 +890,7 @@ export const genBitFeedMml = async (
               5000 + Math.floor(Math.random() * 5000)
             }" ping-pong="true" ping-pong-delay="1000"></m-attr-anim>`
           : ``
-      } ${slot.r === 5 && placeModel && modelWillAppear ? `<m-model src="https://quark20a.s3.us-west-1.amazonaws.com/q/1377952728323592342_1748599938.glb" x="0" y=".4" z="0" sx=".5" sy=".5" sz=".5"> </m-model>
+      } ${slot.r === 5 && placeModel && modelWillAppear ? `<m-model src="https://quark20a.s3.us-west-1.amazonaws.com/q/1377952728323592342_1748599938.glb" x="0" y=".5" z="0" sx=".5" sy=".5" sz=".5"> </m-model>
 `: ``}</m-cube>`;
       if (slot.r === 5) {
         placeModel = false; // Only place one puppet

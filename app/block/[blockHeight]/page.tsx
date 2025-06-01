@@ -69,21 +69,22 @@ export default function BlockPage() {
     window.addEventListener("resize", onWindowResize);
 
     function setupLights() {
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+      const ambientLight = new THREE.AmbientLight(0xffffff, .1);
       scene.add(ambientLight);
 
-      const mainLight = new THREE.DirectionalLight(0xffffff, 2.8);
+      const mainLight = new THREE.DirectionalLight(0xffffff, 4.2);
       mainLight.position.set(50, 50, 25);
       mainLight.castShadow = true;
       mainLight.shadow.mapSize.width = 2048;
       mainLight.shadow.mapSize.height = 2048;
-      mainLight.shadow.camera.near = 0.5;
-      mainLight.shadow.camera.far = 500;
-      const d = 100;
-      mainLight.shadow.camera.left = -d;
-      mainLight.shadow.camera.right = d;
-      mainLight.shadow.camera.top = d;
-      mainLight.shadow.camera.bottom = -d;
+      // mainLight.shadow.camera.near = 0.5;
+      // mainLight.shadow.bias = -0.001;
+      // mainLight.shadow.camera.far = 500;
+      // const d = 100;
+      // mainLight.shadow.camera.left = -d;
+      // mainLight.shadow.camera.right = d;
+      // mainLight.shadow.camera.top = d;
+      // mainLight.shadow.camera.bottom = -d;
       scene.add(mainLight);
 
       const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
