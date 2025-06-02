@@ -1,5 +1,6 @@
 import format from "xml-formatter";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 // Global cache for JSON content keyed by part
 const blockJsonCache = new Map<number, any>();
@@ -272,9 +273,118 @@ export function processXMLNode(node: any, parent: any) {
       }
     }
 
-    // Add cube to parent
+    // ---- New Code Start: Process nested m-model nodes (or other supported nodes)
+    for (let i = 0; i < node.childNodes.length; i++) {
+      const child = node.childNodes[i];
+      // Skip nodes already handled like m-attr-anim and m-image.
+      if (child.nodeType === 1 && child.nodeName === "m-model") {
+        processXMLNode(child, result);
+      }
+    }
+    // ---- New Code End
+
+    // Add cube to parent and update objects array
     parent.add(result);
     objects.push(result);
+  } else if (node.nodeName === "m-model") {
+    // Extract model attributes
+    const modelData = {
+        src: node.getAttribute("src"),
+        x: parseFloat(node.getAttribute("x") || 0),
+        y: parseFloat(node.getAttribute("y") || 0),
+        z: parseFloat(node.getAttribute("z") || 0),
+        rx: node.hasAttribute("rx") ? parseFloat(node.getAttribute("rx")) : 0,
+        ry: node.hasAttribute("ry") ? parseFloat(node.getAttribute("ry")) : 0,
+        rz: node.hasAttribute("rz") ? parseFloat(node.getAttribute("rz")) : 0,
+        sx: node.hasAttribute("sx") ? parseFloat(node.getAttribute("sx")) : 1,
+        sy: node.hasAttribute("sy") ? parseFloat(node.getAttribute("sy")) : 1,
+        sz: node.hasAttribute("sz") ? parseFloat(node.getAttribute("sz")) : 1,
+    };
+
+    // Create a new group to hold the model
+    const modelGroup = new THREE.Group();
+    modelGroup.position.set(modelData.x, modelData.y, modelData.z);
+    modelGroup.rotation.set(
+        THREE.MathUtils.degToRad(modelData.rx),
+        THREE.MathUtils.degToRad(modelData.ry),
+        THREE.MathUtils.degToRad(modelData.rz)
+    );
+    modelGroup.scale.set(modelData.sx, modelData.sy, modelData.sz);
+
+    // Load the model
+    const loader = new GLTFLoader();
+    loader.load(
+        modelData.src,
+        (gltf) => {
+            gltf.scene.traverse((child) => {
+                if ((child as THREE.Mesh).isMesh) {
+                    (child as THREE.Mesh).castShadow = true;
+                    (child as THREE.Mesh).receiveShadow = true;
+                }
+            });
+            modelGroup.add(gltf.scene);
+        },
+        undefined,
+        (error) => {
+            console.error("Error loading model:", error);
+        }
+    );
+
+    // Optional: Process child m-attr-anim tags for animation support
+    for (let i = 0; i < node.childNodes.length; i++) {
+        const child = node.childNodes[i];
+        if (child.nodeType === 1 && child.nodeName === "m-attr-anim") {
+            const animData = {
+                attr: child.getAttribute("attr"),
+                start: parseFloat(child.getAttribute("start") || 0),
+                end: parseFloat(child.getAttribute("end") || 0),
+                startTime: parseInt(child.getAttribute("start-time") || 0),
+                duration: parseInt(child.getAttribute("duration") || 1000),
+                pingPong: child.getAttribute("ping-pong") === "true",
+                easing: child.getAttribute("easing") || "linear",
+            };
+            // Store animations in a userData field
+            if (!modelGroup.userData.attrAnimations) {
+                modelGroup.userData.attrAnimations = [];
+            }
+            modelGroup.userData.attrAnimations.push(animData);
+        }
+    }
+
+    // Attach a basic controller to update animations if any
+    if (modelGroup.userData.attrAnimations) {
+        let elapsedTime = 0;
+        let animationStarted = false;
+        modelGroup.controller = {
+            update: (delta: number) => {
+                elapsedTime += delta * 1000; // ms
+                modelGroup.userData.attrAnimations.forEach((anim: any) => {
+                    if (elapsedTime >= anim.startTime) {
+                        let progress = ((elapsedTime - anim.startTime) % anim.duration) / anim.duration;
+                        if (anim.pingPong && Math.floor((elapsedTime - anim.startTime) / anim.duration) % 2 === 1) {
+                            progress = 1 - progress;
+                        }
+                        if (anim.easing === "easeInOutCubic") {
+                            progress = progress < 0.5 ? 4 * progress ** 3 : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                        }
+                        const value = anim.start + (anim.end - anim.start) * progress;
+                        if (anim.attr === "x") modelGroup.position.x = value;
+                        else if (anim.attr === "y") modelGroup.position.y = value;
+                        else if (anim.attr === "z") modelGroup.position.z = value;
+                        else if (anim.attr === "rx") modelGroup.rotation.x = THREE.MathUtils.degToRad(value);
+                        else if (anim.attr === "ry") modelGroup.rotation.y = THREE.MathUtils.degToRad(value);
+                        else if (anim.attr === "rz") modelGroup.rotation.z = THREE.MathUtils.degToRad(value);
+                        else if (anim.attr === "sx") modelGroup.scale.x = value;
+                        else if (anim.attr === "sy") modelGroup.scale.y = value;
+                        else if (anim.attr === "sz") modelGroup.scale.z = value;
+                    }
+                });
+            },
+        };
+    }
+
+    parent.add(modelGroup);
+    objects.push(modelGroup);
   }
   return objects;
 }
@@ -755,12 +865,36 @@ export const genBitFeedMml = async (
   const blockWidth = Math.ceil(Math.sqrt(blockWeight));
   const mondrian = new MondrianLayout(blockWidth, blockWidth);
   let parcelsMML = "";
+  const parcelSizeCounts: { [key: number]: number } = {}; // Count each parcel size
+  let placeModel = true;
+  const modelWillAppear = Math.random() > 0.7; // Randomly decide if a model will appear
 
   for (let i = 0; i < txList.length; i++) {
     const slot = mondrian.place(txList[i].size);
 
     if (slot) {
-      parcelsMML += `<m-cube id="parcel-${i}-size-${slot.r}" width="${slot.r * size * 0.9}" height="${platform_thickness * slot.r}" depth="${slot.r * size * 0.9}" x="${(slot.position.x + slot.r - blockWidth / 2) * size - margin * slot.r}" y="${(0.1 * slot.r) / 2}" z="${(slot.position.y + slot.r - blockWidth / 2) * size - margin * slot.r}" color="${parcelColor}">${Math.random() > 0.95 ? `<m-attr-anim attr="y" start="0.5" end="${0.5 + Math.floor(Math.random() * 7)}" start-time="2000" duration="${5000 + Math.floor(Math.random() * 5000)}" ping-pong="true" ping-pong-delay="1000"></m-attr-anim>` : ``} </m-cube>`;
+      // Tally count per parcel size
+      parcelSizeCounts[slot.r] = (parcelSizeCounts[slot.r] || 0) + 1;
+      
+      parcelsMML += `<m-cube id="parcel-${i}-size-${slot.r}" width="${
+        slot.r * size * 0.9
+      }" height="${platform_thickness * slot.r}" depth="${
+        slot.r * size * 0.9
+      }" x="${(slot.position.x + slot.r - blockWidth / 2) * size - margin * slot.r}" y="${(0.1 * slot.r) / 2}" z="${
+        (slot.position.y + slot.r - blockWidth / 2) * size - margin * slot.r
+      }" color="${parcelColor}">${
+        Math.random() > 0.95
+          ? `<m-attr-anim attr="y" start="0.5" end="${
+              0.5 + Math.floor(Math.random() * 7)
+            }" start-time="2000" duration="${
+              5000 + Math.floor(Math.random() * 5000)
+            }" ping-pong="true" ping-pong-delay="1000"></m-attr-anim>`
+          : ``
+      } ${slot.r === 5 && placeModel && modelWillAppear ? `<m-model src="https://quark20a.s3.us-west-1.amazonaws.com/q/1377952728323592342_1748599938.glb" x="0" y=".5" z="0" sx=".5" sy=".5" sz=".5"> </m-model>
+`: ``}</m-cube>`;
+      if (slot.r === 5) {
+        placeModel = false; // Only place one puppet
+      }
     }
   }
 
@@ -771,5 +905,5 @@ export const genBitFeedMml = async (
     },
   );
 
-  return { mmlFile: outputMml, blockWidth };
+  return { mmlFile: outputMml, blockWidth, parcelSizeCounts };
 };

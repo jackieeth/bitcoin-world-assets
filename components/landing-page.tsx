@@ -8,14 +8,7 @@ import { Gallery, Item } from "@/components/gallery";
 import btclogo from "../styles/bitcoin-logo.png";
 import { getBlockImage } from "@/lib/gen-bitfeed";
 import { BlockVisualization } from "@/components/block-visualization";
-
-const unixToDate = () => {
-  const date = new Date();
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+import logoMH from "../styles/manh.png";
 
 interface LandingPageProps {
   onSearch: (query: string) => void;
@@ -40,6 +33,7 @@ export function LandingPage({
       priceSats?: number;
       blockTime?: string;
       listingUri?: string;
+      listedOn?: string;
     }[]
   >([]);
   const [loading, setLoading] = useState(false);
@@ -99,7 +93,8 @@ export function LandingPage({
   useEffect(() => {
     if (window.location.pathname !== "/") return;
     const ua = navigator.userAgent;
-    const isMobileSafari = /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
+    const isMobileSafari =
+      /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
     if (isMobileSafari) return;
 
     const fetchLatestListings = async () => {
@@ -126,12 +121,12 @@ export function LandingPage({
         try {
           // Fetch latest Magisat listings
           const resMagisat = await fetch(
-            `${process.env.NEXT_PUBLIC_LISTINGS_URI}/${unixToDate()}mg.json`,
+            `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getlistings?marketplace=mg&passcode=${process.env.NEXT_PUBLIC_QUARK20_API_LISTING_KEY}`,
             {
               method: "GET",
               headers: {
                 accept: "application/json",
-              }
+              },
             },
           ).then((d) => d.json());
 
@@ -143,10 +138,17 @@ export function LandingPage({
               uncommonFloorPrice = Math.min(uncommonFloorPrice, item.price);
               if (blockNumber > 840000) continue; // Skip blocks after 840000
               let sattributes = "";
-              for (const sattribue of item.mainSatoshi.sattributes) {
+              const sortedSatributes = item.mainSatoshi.sattributes.sort(
+                (a: any, b: any) => a.slug.localeCompare(b.slug),
+              );
+              for (const sattribue of sortedSatributes) {
                 sattributes += sattribue.slug.toUpperCase() + " ";
               }
 
+              if (sattributes.includes("INSCRIPTION")) {
+                continue;
+              }
+              // Only include uncommon sats
               SatBlocks.push({
                 blockNumber: blockNumber,
                 satStash: item.mainSatoshi.rangeStart,
@@ -154,6 +156,7 @@ export function LandingPage({
                 priceSats: item.price,
                 blockTime: item.mainSatoshi.blockTimestamp,
                 listingUri: `https://magisat.io/listing/${item.id}`,
+                listedOn: "Magisat",
               });
             }
           }
@@ -164,7 +167,7 @@ export function LandingPage({
         try {
           // Fetch latest ME listings
           const resMagicEden = await fetch(
-            `${process.env.NEXT_PUBLIC_LISTINGS_URI}/${unixToDate()}me.json`,
+            `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getlistings?marketplace=me&passcode=${process.env.NEXT_PUBLIC_QUARK20_API_LISTING_KEY}`,
             {
               method: "GET",
               headers: {
@@ -174,7 +177,7 @@ export function LandingPage({
           ).then((d) => d.json());
 
           const dataME = resMagicEden["listings"];
-          
+
           if (dataME) {
             for (const item of dataME) {
               const blockNumber = satToBlock(
@@ -188,14 +191,19 @@ export function LandingPage({
               if (
                 item.rareSatsUtxo.satRanges[0].satributes.includes("Uncommon")
               ) {
+                const sortedSatributes =
+                  item.rareSatsUtxo.satRanges[0].satributes.sort(
+                    (a: string, b: string) => a.localeCompare(b),
+                  );
                 SatBlocks.push({
                   blockNumber: blockNumber,
                   satStash: item.rareSatsUtxo.satRanges[0].parentFrom,
-                  sattributes:
-                    item.rareSatsUtxo.satRanges[0].satributes.join(" "),
+                  sattributes: sortedSatributes.join(" "),
                   priceSats: item.rareSatsUtxo.listedPrice,
                   blockTime: item.rareSatsUtxo.satRanges[0].blockInfo.blockTime,
-                  listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
+                  // listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
+                  listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats`,
+                  listedOn: "MagicEden",
                 });
               }
             }
@@ -305,10 +313,13 @@ export function LandingPage({
       for (const item of filtered) {
         for (const satStash of item.ranges) {
           const blockNumber = satToBlock(satStash[0]);
+          const sortedSatributes = item.satributes.sort(
+            (a: string, b: string) => a.localeCompare(b),
+          );
           SatBlocks.push({
             blockNumber: blockNumber,
             satStash: satStash[0],
-            sattributes: item.satributes.join(" "),
+            sattributes: sortedSatributes.join(" "),
           });
         }
       }
@@ -369,6 +380,7 @@ export function LandingPage({
             showListings: showListings,
             blockTime: sat.blockTime || "",
             listingUri: sat.listingUri || "",
+            listedOn: sat.listedOn || "",
           })),
         );
         setAwaitGalleryItems(items.sort((a, b) => a.sat - b.sat));
@@ -394,13 +406,19 @@ export function LandingPage({
   return (
     <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <div className="mt-20 max-w-5xl space-y-6 transition-all duration-500">
+        <a href="/"><img
+          src={logoMH.src}
+          alt="Manhattan Logo"
+          className="block mx-auto w-32 h-32"
+        /></a>
         <div className="flex items-center justify-center">
-          <img
-            src={btclogo.src}
-            alt="Bitcoin Logo"
-            className="w-12 h-12 mr-2" // adjust size and spacing as needed
-          />
           <a href="/">
+            {/* <img
+              src={btclogo.src}
+              alt="Bitcoin Logo"
+              className="w-12 h-12 mr-2" // adjust size and spacing as needed
+            /> */}
+
             <h1 className="text-2xl font-bold tracking-tighter sm:text-5xl md:text-2xl lg:text-3xl">
               BITCOIN WORLD ASSETS
             </h1>
@@ -436,19 +454,22 @@ export function LandingPage({
           </small>
           <br />
           <br />
-          {showListings && btcBlockHeight && uncommonFloorPrice && btcUsdPrice && (
-            <small>
-              Total: {btcBlockHeight} BWAs, Floor: $
-              {Math.floor((uncommonFloorPrice * btcUsdPrice) / 10000000) / 10},
-              MCap: $
-              {Math.floor(
-                (((uncommonFloorPrice * btcUsdPrice) / 100000000) *
-                  btcBlockHeight) /
-                  100000,
-              ) / 10}
-              M<br />
-            </small>
-          )}
+          {showListings &&
+            btcBlockHeight &&
+            uncommonFloorPrice &&
+            btcUsdPrice && (
+              <small>
+                Total: {btcBlockHeight} BWAs, Floor: $
+                {Math.floor((uncommonFloorPrice * btcUsdPrice) / 10000000) / 10}
+                , MarketCap: $
+                {Math.floor(
+                  (((uncommonFloorPrice * btcUsdPrice) / 100000000) *
+                    btcBlockHeight) /
+                    100000,
+                ) / 10}
+                M<br />
+              </small>
+            )}
         </p>
 
         <form className="mx-auto flex w-full max-w-3xl items-center space-x-2">

@@ -20,6 +20,7 @@ export type Item = {
   showListings: boolean;
   blockTime?: string; // Optional field for block time
   listingUri?: string; // Optional field for listing URI
+  listedOn?: string; // Optional field for listing marketplace
   // ntx: number;
 };
 
