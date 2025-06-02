@@ -1,6 +1,6 @@
 # Bitcoin World Assets
 
-[Bitcoin 2025 Hackathon Finalist (honorable mentions)!!]
+_Bitcoin Conference 2025 Hackathon Finalist (honorable mentions)!!_
 
 **Bitcoin World Assets** (https://bitcoinworldassets.com) is a web application for visualizing and exploring Bitcoin World Assets (BWAs) as digital world real estate natively tied to Bitcoin blocks. Each BWA represents the first Satoshi ("Uncommon Sat") of a Bitcoin block, visualized as a unique digital 3D world. The project integrates BTC block data, BTC Ordinals protocol, rare sats, and 3D visualization. If you own Bitcoin, you may own BWAs.
 
@@ -61,6 +61,8 @@ We identified a fair distributed BTC asset class (i.e., using Uncommon Sats as t
 2. a smooth experience of browsing visualized BTC blocks in 2D AND 3D,
 3. downloadable 3D data and image-index up-to block 840k, and
 4. possibilities for building durable digital worlds on top of Bitcoin blocks.
+
+_Bitcoin Conference 2025 Hackathon Finalist (honorable mentions)!!_
 
 ## What we learned
 
