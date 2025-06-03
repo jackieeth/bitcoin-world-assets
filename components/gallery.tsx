@@ -38,9 +38,10 @@ interface GalleryProps {
   itemsData: Item[]; // Add this prop to accept external data
   btcUsdPrice?: number; // Optional prop for BTC/USD price
   showListings?: boolean; // Optional prop to control listing display
+  bwaHolder?: string;
 }
 
-export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListings }: GalleryProps) {
+export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListings, bwaHolder }: GalleryProps) {
   // State for items and filtered items
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
@@ -129,8 +130,8 @@ export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListin
         <div/>
       ) : (
         <div>
-        <div className="flex items-center justify-center border border-white/10 text-white/60 mb-4">
-          {items.length > 1 ? `${items.length} Bitcoin World Assets` : `1 Bitcoin World Asset`} {showListings ? 'found at marketplaces':' found'}
+        <div className="block items-center justify-center border border-white/10 text-white/60 mb-4">
+          {items.length > 1 ? `${items.length} Bitcoin World Assets` : `1 Bitcoin World Asset`} {showListings ? 'found via BWA market viewer (to be member-only access)':' found!!'}<div>{bwaHolder ? `${bwaHolder} (BWA OG)` : ''} </div>
         </div>
         <div className={gridClasses}>
           

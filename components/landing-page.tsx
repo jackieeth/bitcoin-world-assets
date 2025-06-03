@@ -425,33 +425,7 @@ export function LandingPage({
           </a>
         </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          IMMUTABLE DIGITAL WORLD REAL ESTATE
-          <br />
-          <br />
-          <small>
-            Bitcoin World Assets (BWAs) are the <i>root</i> digital world real
-            estate assets natively born with each block of Bitcoin. BWAs are the
-            1st Satoshi (Uncommon Sats) of the BTC BLOCKS based on a tradition
-            that early BTC miners used the 1st satoshis to represent BTC blocks
-            for record-keeping. BWAs can be found as "Uncommon Sats" at
-            marketplaces (e.g.,{" "}
-            <a
-              style={{ textDecoration: "underline" }}
-              href={`https://magiceden.us/ordinals/marketplace/rare-sats`}
-              target="_blank"
-            >
-              Magic Eden
-            </a>
-            ,{" "}
-            <a
-              style={{ textDecoration: "underline" }}
-              href={`https://magisat.io/category/uncommon`}
-              target="_blank"
-            >
-              Magisat
-            </a>
-            ...). How many do you own?
-          </small>
+          TIMELESS DIGITAL WORLD REAL ESTATE
           <br />
           <br />
           {showListings &&
@@ -470,6 +444,33 @@ export function LandingPage({
                 M<br />
               </small>
             )}
+          <br />
+          <small>
+            Bitcoin World Assets (BWAs) are the <i>root</i> digital world real
+            estate assets natively born with each block of Bitcoin. BWAs are immutable 
+            <b> miner deeds</b>. BWAs are the 1st Satoshi (Uncommon Sats) of the BTC BLOCKS based on a tradition
+            that early BTC miners used the 1st satoshis of their mined blocks for record-keeping. BWAs can be found as "Uncommon Sats" at
+            marketplaces (e.g.,{" "}
+            <a
+              style={{ textDecoration: "underline" }}
+              href={`https://magiceden.us/ordinals/marketplace/rare-sats`}
+              target="_blank"
+            >
+              Magic Eden
+            </a>
+            ,{" "}
+            <a
+              style={{ textDecoration: "underline" }}
+              href={`https://magisat.io/category/uncommon`}
+              target="_blank"
+            >
+              Magisat
+            </a>
+            ...).
+          </small>
+          <br /><br />
+          <small>Join as a BWA OG now by inspecting your BTC wallet that contains at least one BWA.</small>
+          
         </p>
 
         <form className="mx-auto flex w-full max-w-3xl items-center space-x-2">
@@ -517,6 +518,7 @@ export function LandingPage({
               itemsData={awaitGalleryItems}
               btcUsdPrice={btcUsdPrice ?? undefined}
               showListings={showListings}
+              bwaHolder={searchQuery}
             />
           )
         )}
