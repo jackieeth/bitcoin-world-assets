@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Item } from "@/components/gallery";
+import blocksOfSats from "../lib/uncommonBlocksOf.json"
+import uncommonSatribute from "../lib/uncommonSatributes.json"
 
 interface GridItemProps {
   item: Item;
@@ -18,6 +20,17 @@ function extractYearMonth(dateString: string) {
 }
 
 export function GridItem({ item, btcUsdPrice }: GridItemProps) {
+  const traits = []
+  if (uncommonSatribute["size9"].includes(Number(item.block))){
+    traits.push("Size9")
+  }
+  if (uncommonSatribute["bitmap"].includes(Number(item.block))){
+    traits.push(".bitmap")
+  }
+  if (blocksOfSats["blocksOf"].includes(Number(item.block))){
+    traits.push("BlocksOfBitcoin")
+  }
+  const traitLine = traits.join(" ").trim()
   return (
     <div className={item.description.includes("ALPHA") ? "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-lg transition-all hover:border-white/50" : "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/50"}>
       
@@ -43,7 +56,8 @@ export function GridItem({ item, btcUsdPrice }: GridItemProps) {
           </h3>
           <p className="mt-1 text-xs text-white/70">
             {item.description}{item.blockTime ? <small style={{color:"gray"}}>{" " + extractYearMonth(item.blockTime)+""}</small> : ""}<br/>
-            <small style={{color:"gray"}}>SAT #{item.sat}</small>
+            <small style={{color:"gray"}}>SAT #{item.sat}{traits.length > 0 ? <span style={{color:"#ccc"}}><br/>{traitLine}</span>:<span/>}
+              </small>
             {btcUsdPrice && item.priceSats > 0 && <Link
         href={`${item.listingUri}`}
         className="block hover:underline"

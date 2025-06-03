@@ -12,6 +12,8 @@ import {
   getBlockImage,
   Block1stSat
 } from "../../../lib/gen-bitfeed";
+import blocksOfSats from "../../../lib/uncommonBlocksOf.json"
+import uncommonSatribute from "../../../lib/uncommonSatributes.json"
 
 export default function BlockPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -22,6 +24,7 @@ export default function BlockPage() {
   const [satInfo, setSatInfo] = useState<any>({});
   const [imgLoaded, setImgLoaded] = useState(false);
   const [xmlContent, setXmlDoc] = useState<string>("");
+  const [traitLine, setTraitLine] = useState<string>("");
   // New state for parcel stats
   const [parcelStats, setParcelStats] = useState<{ counts: Record<string, number>, total: number } | null>(null);
 
@@ -195,6 +198,24 @@ export default function BlockPage() {
     fetchSat();
   }, [blockHeight]);
 
+  useEffect(() => {
+    async function fetchTraits() {
+
+  const traits = []
+  if (uncommonSatribute["size9"].includes(Number(blockHeight))){
+    traits.push("Size9")
+  }
+  if (uncommonSatribute["bitmap"].includes(Number(blockHeight))){
+    traits.push(".bitmap")
+  }
+  if (blocksOfSats["blocksOf"].includes(Number(blockHeight))){
+    traits.push("BlocksOfBitcoin")
+  }
+  setTraitLine(traits.join(" ").trim())
+}
+fetchTraits();
+  }, [blockHeight]);
+
   return (
     <main className="relative max-w-screen max-h-screen bg-black text-white">
       <div ref={canvasRef} className="w-full h-screen" />
@@ -204,18 +225,18 @@ export default function BlockPage() {
         {blockHeight ? `BLOCK ${blockHeight}` : "Loading BTC block..."}
         <br />
         <span className="text-xs text-slate-400">
-          SAT #{Block1stSat(Number(blockHeight))} {satInfo && satInfo.rarity && `(${satInfo.rarity})`}<br/>
-          {satInfo.creation_date}<br/>
+          <span style={{color:"#ccc"}}>{satInfo && satInfo.rarity && `${satInfo.rarity}`}</span><br/>
+          SAT #{Block1stSat(Number(blockHeight))}{traitLine ? <span style={{color:"#ccc"}}><br/>Traits: {traitLine}</span>:<span/>}<br/>
+          Mined: {satInfo.creation_date}<br/>
+          
         </span>
-        <span className="text-xs">
-          BTC block data <a style={{textDecoration: "underline"}} href={`https://bitfeed.live/block/height/${blockHeight}`}>visualized</a>
-        </span><br/>
+        
         {blockImageUrl && (
-          <img
+          <a style={{textDecoration: "underline"}} href={`https://bitfeed.live/block/height/${blockHeight}`}><img
             src={blockImageUrl}
             className={`w-24 h-24 mt-2 grayscale transition-opacity duration-700 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
             onLoad={() => setImgLoaded(true)}
-          />
+          /></a>
         )}
         <button
           className="text-xs text-slate-400"
