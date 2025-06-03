@@ -31,7 +31,7 @@ export type GridConfig = {
 };
 
 // Sort options
-export type SortOption = "newest" | "oldest"; // | "title"
+export type SortOption = "newest" | "oldest" | "price"; // | "title"
 
 interface GalleryProps {
   initialFilter?: string;
@@ -49,7 +49,7 @@ export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListin
 
   // State for filters and sorting
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [sortBy, setSortBy] = useState<SortOption>("oldest");
 
   // State for grid configuration
   const [gridConfig, setGridConfig] = useState<GridConfig>({
@@ -65,8 +65,8 @@ export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListin
   }, [itemsData]);
 
   // Get unique categories from items
-  // const categories = ["all", ...Array.from(new Set(items.map((item) => item.category)))]
-  const categories = ["all", "rare-sats", "uncommon-sats", "common-sats"];
+  const categories = ["all", ...Array.from(new Set(items.map((item) => item.description)))]
+  // const categories = ["all", "rare-sats", "uncommon-sats", "common-sats"];
 
   // Handle category filter change
   const handleCategoryChange = (category: string) => {
@@ -92,6 +92,9 @@ export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListin
       case "oldest":
         sorted.sort((a, b) => a.sat - b.sat);
         break;
+      case "price":
+        sorted.sort((a, b) => a.priceSats - b.priceSats);
+        break;
       // case "title":
       //   sorted.sort((a, b) => a.title.localeCompare(b.title))
       //   break
@@ -116,7 +119,17 @@ export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListin
 
   return (
     <div className="space-y-6">
-      {/* <GalleryControls
+      
+
+      {items.length === 0 ? (
+        <div/>
+      ) : (
+        <div>
+          
+        <div className="block items-center justify-center text-white/60 mb-4 p-6">
+          {filteredItems.length > 1 ? <b>{`${filteredItems.length} Bitcoin World Assets`}</b> : <b>{`1 Bitcoin World Asset`}</b>} {showListings ? <small>{'found via BWA market viewer (soon to be member-only access)'}</small>:' found!!'}<div>{bwaHolder ? `${bwaHolder} (BWA OG)` : ''} </div>
+        </div>
+        <GalleryControls
         categories={categories}
         activeCategory={activeCategory}
         onCategoryChange={handleCategoryChange}
@@ -124,18 +137,10 @@ export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListin
         onSortChange={handleSortChange}
         gridConfig={gridConfig}
         onGridConfigChange={handleGridConfigChange}
-      /> */}
-
-      {items.length === 0 ? (
-        <div/>
-      ) : (
-        <div>
-        <div className="block items-center justify-center border border-white/10 text-white/60 mb-4">
-          {items.length > 1 ? `${items.length} Bitcoin World Assets` : `1 Bitcoin World Asset`} {showListings ? 'found via BWA market viewer (to be member-only access)':' found!!'}<div>{bwaHolder ? `${bwaHolder} (BWA OG)` : ''} </div>
-        </div>
+      />
         <div className={gridClasses}>
           
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <GridItem key={item.id} item={item} btcUsdPrice={btcUsdPrice}/>
           ))}
         </div></div>

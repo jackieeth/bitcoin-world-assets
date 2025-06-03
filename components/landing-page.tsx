@@ -466,7 +466,8 @@ export function LandingPage({
             >
               Magisat
             </a>
-            ...).
+            ). To build on this immutable digital world foundation at the satoshi level, we have been alpha testing a set of tools based on the Bitcoin Ordinal theory, crosschain infrastructure, and generative AIs.
+            
           </small>
           <br /><br />
           <small>Join as a BWA OG now by inspecting your BTC wallet that contains at least one BWA.</small>

@@ -38,7 +38,7 @@ export function GalleryControls({
   onGridConfigChange,
 }: GalleryControlsProps) {
   return (
-    <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+    <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-4">
       {/* <div className="flex flex-wrap gap-2">
         {categories.map((category) => (
           <Button
@@ -54,7 +54,7 @@ export function GalleryControls({
       </div> */}
 
       <div className="flex items-center space-x-2">
-        <div className="hidden sm:flex items-center space-x-1 border-r border-white/10 pr-2">
+        {/* <div className="hidden sm:flex items-center space-x-1 border-r border-white/10 pr-2">
           <Button
             variant={gridConfig.columns === 3 ? "default" : "ghost"}
             size="icon"
@@ -73,7 +73,7 @@ export function GalleryControls({
             <Grid3X3 className="h-4 w-4" />
             <span className="sr-only">4 Columns</span>
           </Button>
-          {/* <Button
+          <Button
             variant={gridConfig.columns === 7 ? "default" : "ghost"}
             size="icon"
             onClick={() => onGridConfigChange({ columns: 7 })}
@@ -81,8 +81,8 @@ export function GalleryControls({
           >
             <LayoutGrid className="h-4 w-4" />
             <span className="sr-only">5 Columns</span>
-          </Button> */}
-        </div>
+          </Button>
+        </div> */}
 
         {/* <div className="hidden sm:flex items-center space-x-1 border-r border-white/10 pr-2">
           <Button
@@ -122,16 +122,22 @@ export function GalleryControls({
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest" className="text-xs">
+            <SelectItem value="newest" className="text-xs bg-black">
               <div className="flex items-center">
                 <ArrowDownNarrowWide className="mr-2 h-3 w-3" />
-                Newest
+                Latest
               </div>
             </SelectItem>
-            <SelectItem value="oldest" className="text-xs">
+            <SelectItem value="oldest" className="text-xs bg-black">
               <div className="flex items-center">
                 <ArrowUpNarrowWide className="mr-2 h-3 w-3" />
                 Oldest
+              </div>
+            </SelectItem>
+            <SelectItem value="price" className="text-xs bg-black">
+              <div className="flex items-center">
+                <ArrowUpNarrowWide className="mr-2 h-3 w-3" />
+                Price
               </div>
             </SelectItem>
             {/* <SelectItem value="title" className="text-xs">
