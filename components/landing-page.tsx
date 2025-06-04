@@ -99,7 +99,7 @@ export function LandingPage({
     const isMobileSafari =
       /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
     if (isMobileSafari) return;
-
+    setLoading(true);
     const fetchLatestListings = async () => {
       try {
         // get latest btc block and price from mempool.space api
@@ -145,16 +145,16 @@ export function LandingPage({
                 (a: any, b: any) => a.slug.localeCompare(b.slug),
               );
 
+              let traits: any[] = [];
               for (const sattribue of sortedSatributes) {
                 sattributes += sattribue.slug.toUpperCase() + " ";
+                traits.push(sattribue.slug.toUpperCase());
               }
 
               if (sattributes.includes("INSCRIPTION")) {
                 continue;
               }
 
-              let traits: any[] = [];
-              traits = traits.concat(sortedSatributes);
               if (uncommonSatribute["size9"].includes(Number(blockNumber))) {
                 traits.push("Size9");
               }
@@ -214,7 +214,10 @@ export function LandingPage({
                     (a: string, b: string) => a.localeCompare(b),
                   );
                 let traits: any[] = [];
-                traits = traits.concat(sortedSatributes);
+                for (const sattribue of sortedSatributes) {
+                  traits.push(sattribue.toUpperCase());
+                }
+
                 if (uncommonSatribute["size9"].includes(Number(blockNumber))) {
                   traits.push("Size9");
                 }
@@ -347,7 +350,11 @@ export function LandingPage({
             (a: string, b: string) => a.localeCompare(b),
           );
           let traits: any[] = [];
-          traits = traits.concat(sortedSatributes);
+
+          for (let index = 0; index < sortedSatributes.length; index++) {
+            traits.push(sortedSatributes[index]);
+          }
+          
           if (uncommonSatribute["size9"].includes(Number(blockNumber))) {
             traits.push("Size9");
           }
@@ -452,7 +459,7 @@ export function LandingPage({
         <a href="/">
           <img
             src={logoMH.src}
-            alt="Manhattan Logo"
+            alt="Cyber Manhattan Logo"
             className="block mx-auto w-32 h-32"
           />
         </a>

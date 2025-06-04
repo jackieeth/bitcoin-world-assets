@@ -12,7 +12,7 @@ export type Item = {
   title: string;
   description: string;
   category: string;
-  traits:any[];
+  traits: any[];
   image: string;
   date: string;
   sat: number;
@@ -42,11 +42,16 @@ interface GalleryProps {
   bwaHolder?: string;
 }
 
-export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListings, bwaHolder }: GalleryProps) {
+export function Gallery({
+  initialFilter = "",
+  itemsData,
+  btcUsdPrice,
+  showListings,
+  bwaHolder,
+}: GalleryProps) {
   // State for items and filtered items
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
-  
 
   // State for filters and sorting
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -66,7 +71,10 @@ export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListin
   }, [itemsData]);
 
   // Get unique categories from items
-  const categories = ["all", ...Array.from(new Set(items.map((item) => item.description)))]
+  const categories = [
+    "all",
+    ...Array.from(new Set(items.map((item) => item.traits.join(" ")))),
+  ];
   // const categories = ["all", "rare-sats", "uncommon-sats", "common-sats"];
 
   // Handle category filter change
@@ -120,31 +128,40 @@ export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListin
 
   return (
     <div className="space-y-6">
-      
-
       {items.length === 0 ? (
-        <div/>
+        <div />
       ) : (
         <div>
-          
-        <div className="block items-center justify-center text-white/60 mb-4 p-6">
-          {filteredItems.length > 1 ? <b>{`${filteredItems.length} Bitcoin World Assets`}</b> : <b>{`1 Bitcoin World Asset`}</b>} {showListings ? <small>{'found via BWA market viewer (soon to be member-only access)'}</small>:' found!!'}<div>{bwaHolder ? `${bwaHolder} (BWA OG)` : ''} </div>
+          <div className="block items-center justify-center text-white/60 mb-4 p-6">
+            {filteredItems.length > 1 ? (
+              <b>{`${filteredItems.length} Bitcoin World Assets`}</b>
+            ) : (
+              <b>{`1 Bitcoin World Asset`}</b>
+            )}{" "}
+            {showListings ? (
+              <small>
+                {"found via BWA market viewer (soon to be member-only access)"}
+              </small>
+            ) : (
+              " found!!"
+            )}
+            <div>{bwaHolder ? `${bwaHolder} (BWA OG)` : ""} </div>
+          </div>
+          <GalleryControls
+            categories={categories}
+            activeCategory={activeCategory}
+            onCategoryChange={handleCategoryChange}
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+            gridConfig={gridConfig}
+            onGridConfigChange={handleGridConfigChange}
+          />
+          <div className={gridClasses}>
+            {filteredItems.map((item) => (
+              <GridItem key={item.id} item={item} btcUsdPrice={btcUsdPrice} />
+            ))}
+          </div>
         </div>
-        <GalleryControls
-        categories={categories}
-        activeCategory={activeCategory}
-        onCategoryChange={handleCategoryChange}
-        sortBy={sortBy}
-        onSortChange={handleSortChange}
-        gridConfig={gridConfig}
-        onGridConfigChange={handleGridConfigChange}
-      />
-        <div className={gridClasses}>
-          
-          {filteredItems.map((item) => (
-            <GridItem key={item.id} item={item} btcUsdPrice={btcUsdPrice}/>
-          ))}
-        </div></div>
       )}
     </div>
   );

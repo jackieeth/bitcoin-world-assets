@@ -39,7 +39,7 @@ export function GalleryControls({
 }: GalleryControlsProps) {
   return (
     <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-4">
-      {/* <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2">
         {categories.map((category) => (
           <Button
             key={category}
@@ -51,7 +51,7 @@ export function GalleryControls({
             {category}
           </Button>
         ))}
-      </div> */}
+      </div>
 
       <div className="flex items-center space-x-2">
         {/* <div className="hidden sm:flex items-center space-x-1 border-r border-white/10 pr-2">
