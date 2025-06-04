@@ -1,6 +1,17 @@
 import * as THREE from "three";
 import { genBitFeedMml, processXMLNode } from "./gen-bitfeed";
 
+export function deterministicRandom(seed: string): number {
+    // Compute a simple hash from the seed string.
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+        hash |= 0; // Convert to 32bit integer
+    }
+    // Use the sine function to generate a pseudo-random number in [0,1)
+    return Math.abs(Math.sin(hash)) % 1;
+}
+
 //------------------- helpers
 const project = (pos: THREE.Vector3, camera: THREE.PerspectiveCamera) => {
   const p = pos.clone().project(camera);
