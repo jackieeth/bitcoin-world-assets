@@ -72,6 +72,7 @@ export default function BlockPage() {
       0.1,
       1000,
     );
+    camera.position.set(0, 5, 10);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -79,10 +80,15 @@ export default function BlockPage() {
     renderer.shadowMap.enabled = true;
     canvasRef.current.appendChild(renderer.domElement);
 
+    //------------------- orbit controls (3rd‑person camera)
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.enablePan = false;
+    controls.enableZoom = false;
+    controls.minDistance = 2;
+    controls.maxDistance = 15;
 
-    //------------------- local cube
+    //------------------- local cube (player)
     const playerMesh = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 0.5, 0.5),
       new THREE.MeshStandardMaterial({ color: 0xffa200 }),
@@ -93,7 +99,8 @@ export default function BlockPage() {
     playerMeshRef.current = playerMesh;
 
     playerLabelRef.current = makeLabel(playerName, labelsRef.current);
-    // Create and attach a smaller cube under the main cube
+
+    // decorative small cube under main cube
     const smallCube = new THREE.Mesh(
       new THREE.BoxGeometry(0.3, 0.3, 0.3),
       new THREE.MeshStandardMaterial({ color: 0xffa200 }),
@@ -125,17 +132,14 @@ export default function BlockPage() {
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
     window.addEventListener("resize", onResize);
-    const onKeyDown = (e: KeyboardEvent) =>
-      (keysPressedRef.current[e.code] = true);
-    const onKeyUp = (e: KeyboardEvent) =>
-      (keysPressedRef.current[e.code] = false);
+    const onKeyDown = (e: KeyboardEvent) => (keysPressedRef.current[e.code] = true);
+    const onKeyUp = (e: KeyboardEvent) => (keysPressedRef.current[e.code] = false);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
-    //------------------- animation loop
+    //------------------- movement helpers (3rd‑person flying)
     const clock = new THREE.Clock();
-    const speed = 10;
-    const cameraOffset = new THREE.Vector3(0, 5, 10);
+    const speed = 10; // units per second
 
     const smoothRemotes = (dt: number) => {
       const alpha = 1 - Math.exp(-dt * 10);
@@ -146,21 +150,35 @@ export default function BlockPage() {
     };
 
     const updateLocal = (dt: number) => {
-      const m = new THREE.Vector3();
-      if (keysPressedRef.current["KeyW"]) m.z -= 1;
-      if (keysPressedRef.current["KeyS"]) m.z += 1;
-      if (keysPressedRef.current["KeyA"]) m.x -= 1;
-      if (keysPressedRef.current["KeyD"]) m.x += 1;
-      if (keysPressedRef.current["Space"]) m.y += 1;
-      if (
-        keysPressedRef.current["ShiftLeft"] ||
-        keysPressedRef.current["ShiftRight"]
-      )
-        m.y -= 1;
-      if (m.lengthSq() > 0)
-        playerMesh.position.add(m.normalize().multiplyScalar(dt * speed));
+      const moveInput = new THREE.Vector3();
+      if (keysPressedRef.current["KeyW"]) moveInput.z += 1;
+      if (keysPressedRef.current["KeyS"]) moveInput.z -= 1;
+      if (keysPressedRef.current["KeyA"]) moveInput.x -= 1;
+      if (keysPressedRef.current["KeyD"]) moveInput.x += 1;
+      if (keysPressedRef.current["Space"]) moveInput.y += 1;
+      if (keysPressedRef.current["ShiftLeft"] || keysPressedRef.current["ShiftRight"]) moveInput.y -= 1;
 
-      // send position
+      if (moveInput.lengthSq() > 0) {
+        moveInput.normalize();
+
+        // camera‑relative directions
+        const forward = new THREE.Vector3();
+        camera.getWorldDirection(forward);
+        forward.y = 0; // keep movement horizontal relative to ground
+        forward.normalize();
+
+        const right = new THREE.Vector3();
+        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+        const worldMove = new THREE.Vector3();
+        worldMove.addScaledVector(forward, moveInput.z);
+        worldMove.addScaledVector(right, moveInput.x);
+        worldMove.addScaledVector(new THREE.Vector3(0, 1, 0), moveInput.y);
+
+        playerMesh.position.add(worldMove.multiplyScalar(dt * speed));
+      }
+
+      // broadcast position to server
       if (socketRef.current?.readyState === WebSocket.OPEN) {
         socketRef.current.send(
           JSON.stringify({
@@ -171,22 +189,22 @@ export default function BlockPage() {
         );
       }
 
-      // camera follow
-      camera.position.lerp(playerMesh.position.clone().add(cameraOffset), 0.1);
-      camera.lookAt(playerMesh.position);
-
-      // label
-      if (playerLabelRef.current)
-        updateLabel(playerMesh, playerLabelRef.current, camera);
+      // label follow
+      if (playerLabelRef.current) updateLabel(playerMesh, playerLabelRef.current, camera);
     };
 
     const animate = () => {
       requestAnimationFrame(animate);
       const dt = clock.getDelta();
+
       updateAnimations(objectsRef.current, dt);
       updateLocal(dt);
       smoothRemotes(dt);
+
+      // keep camera orbiting the player
+      controls.target.copy(playerMesh.position);
       controls.update();
+
       renderer.render(scene, camera);
     };
     animate();
@@ -203,9 +221,7 @@ export default function BlockPage() {
   // =============== WebSocket connection ================
   useEffect(() => {
     if (!connected) return;
-    const wsUrl =
-      (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080") +
-      `?room=${blockHeight}`;
+    const wsUrl = (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080") + `?room=${blockHeight}`;
     const ws = new WebSocket(wsUrl);
     socketRef.current = ws;
 
@@ -216,10 +232,8 @@ export default function BlockPage() {
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data);
       if (data.type !== "state") return;
-      const playersState: Record<
-        string,
-        { x: number; y: number; z: number; name?: string }
-      > = data.players;
+      const playersState: Record<string, { x: number; y: number; z: number; name?: string }> = data.players;
+
       Object.entries(playersState).forEach(([id, p]) => {
         if (id === playerId) return;
         let remote = remotePlayersRef.current.get(id);
@@ -227,35 +241,27 @@ export default function BlockPage() {
           if (!labelsRef.current) return;
           const mesh = new THREE.Mesh(
             new THREE.BoxGeometry(0.5, 0.5, 0.5),
-            new THREE.MeshStandardMaterial({
-              color: "orange",
-              transparent: true,
-              opacity: 0.7,
-            }),
+            new THREE.MeshStandardMaterial({ color: "orange", transparent: true, opacity: 0.7 }),
           );
           mesh.castShadow = true;
           sceneRef.current?.add(mesh);
           const label = makeLabel(p.name ?? id.slice(-4), labelsRef.current);
           remote = { mesh, label, targetPos: new THREE.Vector3() };
           remotePlayersRef.current.set(id, remote);
+
           const smallCube = new THREE.Mesh(
             new THREE.BoxGeometry(0.3, 0.3, 0.3),
-            new THREE.MeshStandardMaterial({
-              color: "orange",
-              transparent: true,
-              opacity: 0.7,
-            }),
+            new THREE.MeshStandardMaterial({ color: "orange", transparent: true, opacity: 0.7 }),
           );
           smallCube.position.set(0, -0.5, 0);
           mesh.add(smallCube);
         }
         remote.label.textContent = p.name ?? id.slice(-4);
         remote.targetPos.set(p.x, p.y, p.z);
-        if (remote.mesh.position.lengthSq() === 0)
-          remote.mesh.position.copy(remote.targetPos);
+        if (remote.mesh.position.lengthSq() === 0) remote.mesh.position.copy(remote.targetPos);
       });
 
-      // remove stale
+      // remove stale players
       remotePlayersRef.current.forEach((remote, id) => {
         if (!playersState[id]) {
           sceneRef.current?.remove(remote.mesh);
@@ -280,10 +286,7 @@ export default function BlockPage() {
   useEffect(() => {
     if (!blockHeight) return;
     (async () => {
-      const url = await getBlockImage(
-        Number(blockHeight),
-        process.env.NEXT_PUBLIC_BLOCKIMAGE_URL || "",
-      );
+      const url = await getBlockImage(Number(blockHeight), process.env.NEXT_PUBLIC_BLOCKIMAGE_URL || "");
       setBlockImageUrl(url);
     })();
   }, [blockHeight]);
@@ -293,14 +296,10 @@ export default function BlockPage() {
     (async () => {
       const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
       if (!apiKey) return;
-      const sat = await new Ordiscan(apiKey).sat.getInfo(
-        Block1stSat(Number(blockHeight)),
-      );
+      const sat = await new Ordiscan(apiKey).sat.getInfo(Block1stSat(Number(blockHeight)));
       setSatInfo({
         ...sat,
-        rarity: sat.satributes
-          .sort((a: string, b: string) => a.localeCompare(b))
-          .join(" "),
+        rarity: sat.satributes.sort((a: string, b: string) => a.localeCompare(b)).join(" "),
       });
     })();
   }, [blockHeight]);
@@ -308,12 +307,9 @@ export default function BlockPage() {
   useEffect(() => {
     if (!blockHeight) return;
     const traits: string[] = [];
-    if (uncommonSatribute["size9"].includes(Number(blockHeight)))
-      traits.push("Size9");
-    if (uncommonSatribute["bitmap"].includes(Number(blockHeight)))
-      traits.push(".bitmap");
-    if (blocksOfSats["blocksOf"].includes(Number(blockHeight)))
-      traits.push("BlocksOfBitcoin");
+    if (uncommonSatribute["size9"].includes(Number(blockHeight))) traits.push("Size9");
+    if (uncommonSatribute["bitmap"].includes(Number(blockHeight))) traits.push(".bitmap");
+    if (blocksOfSats["blocksOf"].includes(Number(blockHeight))) traits.push("BlocksOfBitcoin");
     setTraitLine(traits.join(" ").trim());
   }, [blockHeight]);
 
@@ -332,9 +328,7 @@ export default function BlockPage() {
         {blockHeight ? `BLOCK ${blockHeight}` : "Loading..."}
         <br />
         <span className="text-xs text-slate-400">
-          {satInfo.rarity && (
-            <span className="text-gray-300">{satInfo.rarity}</span>
-          )}
+          {satInfo.rarity && <span className="text-gray-300">{satInfo.rarity}</span>}
           <br />
           SAT #{Block1stSat(Number(blockHeight))}
           {traitLine && (
@@ -348,11 +342,7 @@ export default function BlockPage() {
         </span>
 
         {blockImageUrl && (
-          <a
-            href={`https://bitfeed.live/block/height/${blockHeight}`}
-            target="_blank"
-            className="block mt-2"
-          >
+          <a href={`https://bitfeed.live/block/height/${blockHeight}`} target="_blank" className="block mt-2">
             <img
               src={blockImageUrl}
               onLoad={() => setImgLoaded(true)}
