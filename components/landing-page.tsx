@@ -550,7 +550,9 @@ export function LandingPage({
         </form>
 
         {loading ? (
-          <div className="flex justify-center items-center mb-4">
+          <div className="flex flex-col justify-center items-center mb-4">
+            {showListings && <div className="text-gray-300 mt-4 mb-6">
+          Processing marketplace data...</div>}
             <svg
               className="animate-spin h-8 w-8 text-white"
               xmlns="http://www.w3.org/2000/svg"
