@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { genBitFeedMml, processXMLNode } from "../../../lib/gen-bitfeed";
+import { genBitFeedMml, processXMLNode } from "./gen-bitfeed";
 
 // Download file utility
 export function downloadFile(filename: string, content: string) {

@@ -12,7 +12,7 @@ import {
 } from "../../../lib/gen-bitfeed";
 import blocksOfSats from "../../../lib/uncommonBlocksOf.json";
 import uncommonSatribute from "../../../lib/uncommonSatributes.json";
-import { downloadFile, setupLights, createMMLStructure } from "./blockUtils";
+import { downloadFile, setupLights, createMMLStructure } from "../../../lib/blockUtils";
 
 export default function BlockPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
