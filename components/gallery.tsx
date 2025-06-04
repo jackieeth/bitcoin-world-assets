@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { GridItem } from "@/components/grid-item";
 import { GalleryControls } from "@/components/gallery-controls";
-import { generateItems } from "@/lib/data";
-import { set } from "react-hook-form";
 
 // Define the item type
 export type Item = {
@@ -12,6 +10,7 @@ export type Item = {
   title: string;
   description: string;
   category: string;
+  traits: any[];
   image: string;
   date: string;
   sat: number;
@@ -24,120 +23,114 @@ export type Item = {
   // ntx: number;
 };
 
-// Grid configuration options
-export type GridConfig = {
-  columns: number;
-  gap: number;
-};
-
 // Sort options
-export type SortOption = "newest" | "oldest"; // | "title"
+export type SortOption = "newest" | "oldest" | "price"; // | "title"
 
 interface GalleryProps {
   initialFilter?: string;
   itemsData: Item[]; // Add this prop to accept external data
   btcUsdPrice?: number; // Optional prop for BTC/USD price
   showListings?: boolean; // Optional prop to control listing display
+  bwaHolder?: string;
 }
 
-export function Gallery({ initialFilter = "", itemsData, btcUsdPrice, showListings }: GalleryProps) {
-  // State for items and filtered items
+export function Gallery({
+  itemsData,
+  btcUsdPrice,
+  showListings,
+  bwaHolder,
+}: GalleryProps) {
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
-  
+  const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<SortOption>("oldest");
 
-  // State for filters and sorting
-  const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
-
-  // State for grid configuration
-  const [gridConfig, setGridConfig] = useState<GridConfig>({
-    columns: 6,
-    gap: 2,
-  });
-
-  // Load items from props on mount
   useEffect(() => {
     setItems(itemsData);
-    setFilteredItems(itemsData); // display all items without filtering
-    setActiveCategory("all");
+    setSelectedTraits([]);
   }, [itemsData]);
 
-  // Get unique categories from items
-  // const categories = ["all", ...Array.from(new Set(items.map((item) => item.category)))]
-  const categories = ["all", "rare-sats", "uncommon-sats", "common-sats"];
+  // Get all unique traits from items
+  const allTraits = Array.from(new Set(items.flatMap((item) => item.traits)));
 
-  // Handle category filter change
-  const handleCategoryChange = (category: string) => {
-    setActiveCategory(category);
-
-    if (category === "all") {
-      setFilteredItems(items);
-    } else {
-      setFilteredItems(items.filter((item) => item.category === category));
-    }
+  // Handle trait filter change (toggle trait selection)
+  const handleTraitChange = (trait: string) => {
+    setSelectedTraits((prev) =>
+      prev.includes(trait) ? prev.filter((t) => t !== trait) : [...prev, trait],
+    );
   };
 
   // Handle sort change
   const handleSortChange = (option: SortOption) => {
     setSortBy(option);
+  };
 
-    const sorted = [...filteredItems];
+  // Unified effect for filtering and sorting
+  useEffect(() => {
+    let result = items;
 
-    switch (option) {
-      case "newest":
-        sorted.sort((a, b) => b.sat - a.sat);
-        break;
-      case "oldest":
-        sorted.sort((a, b) => a.sat - b.sat);
-        break;
-      // case "title":
-      //   sorted.sort((a, b) => a.title.localeCompare(b.title))
-      //   break
+    // Filter by traits
+    if (selectedTraits.length > 0) {
+      result = result.filter((item) =>
+        selectedTraits.every((trait) => item.traits.includes(trait)),
+      );
     }
 
-    setFilteredItems(sorted);
-  };
+    // Sort
+    result = [...result];
+    switch (sortBy) {
+      case "newest":
+        result.sort((a, b) => b.sat - a.sat);
+        break;
+      case "oldest":
+        result.sort((a, b) => a.sat - b.sat);
+        break;
+      case "price":
+        result.sort((a, b) => a.priceSats - b.priceSats);
+        break;
+    }
 
-  // Handle grid configuration change
-  const handleGridConfigChange = (config: Partial<GridConfig>) => {
-    setGridConfig((prev) => ({ ...prev, ...config }));
-  };
+    setFilteredItems(result);
+  }, [items, selectedTraits, sortBy]);
 
   // Calculate grid classes based on configuration
-  const gridClasses = `grid-container grid gap-${gridConfig.gap} grid-cols-2 sm:grid-cols-2 ${
-    gridConfig.columns === 3
-      ? "md:grid-cols-3"
-      : gridConfig.columns === 4
-        ? "md:grid-cols-3 lg:grid-cols-4"
-        : "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-  }`;
+  const gridClasses = `grid-container grid gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5`;
 
   return (
     <div className="space-y-6">
-      {/* <GalleryControls
-        categories={categories}
-        activeCategory={activeCategory}
-        onCategoryChange={handleCategoryChange}
-        sortBy={sortBy}
-        onSortChange={handleSortChange}
-        gridConfig={gridConfig}
-        onGridConfigChange={handleGridConfigChange}
-      /> */}
-
       {items.length === 0 ? (
-        <div/>
+        <div />
       ) : (
         <div>
-        <div className="flex items-center justify-center border border-white/10 text-white/60 mb-4">
-          {items.length > 1 ? `${items.length} Bitcoin World Assets` : `1 Bitcoin World Asset`} {showListings ? 'found at marketplaces':' found'}
+          <div className="block items-center justify-center text-white/60 mb-4 p-6">
+            {filteredItems.length > 1 ? (
+              <b>{`${filteredItems.length} Bitcoin World Assets`}</b>
+            ) : (
+              <b>{`1 Bitcoin World Asset`}</b>
+            )}{" "}
+            {showListings ? (
+              <small>
+                {"found via BWA market viewer (soon to be member-only access)"}
+              </small>
+            ) : (
+              " found!!"
+            )}
+            <div>{bwaHolder ? `${bwaHolder} (BWA OG)` : ""} </div>
+          </div>
+
+          <GalleryControls
+            allTraits={allTraits}
+            selectedTraits={selectedTraits}
+            onTraitChange={handleTraitChange}
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+          />
+          <div className={gridClasses}>
+            {filteredItems.map((item) => (
+              <GridItem key={item.id} item={item} btcUsdPrice={btcUsdPrice} />
+            ))}
+          </div>
         </div>
-        <div className={gridClasses}>
-          
-          {items.map((item) => (
-            <GridItem key={item.id} item={item} btcUsdPrice={btcUsdPrice}/>
-          ))}
-        </div></div>
       )}
     </div>
   );

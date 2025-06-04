@@ -18,6 +18,8 @@ function extractYearMonth(dateString: string) {
 }
 
 export function GridItem({ item, btcUsdPrice }: GridItemProps) {
+
+  const traitLine = item.traits.join(" ").replace("UNCOMMON", "").replace("ALPHA", "").trim()
   return (
     <div className={item.description.includes("ALPHA") ? "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-lg transition-all hover:border-white/50" : "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/50"}>
       
@@ -43,7 +45,8 @@ export function GridItem({ item, btcUsdPrice }: GridItemProps) {
           </h3>
           <p className="mt-1 text-xs text-white/70">
             {item.description}{item.blockTime ? <small style={{color:"gray"}}>{" " + extractYearMonth(item.blockTime)+""}</small> : ""}<br/>
-            <small style={{color:"gray"}}>SAT #{item.sat}</small>
+            <small style={{color:"gray"}}>SAT #{item.sat}{item.traits.length > 0 ? <span style={{color:"#ccc"}}><br/>{traitLine}</span>:<span/>}
+              </small>
             {btcUsdPrice && item.priceSats > 0 && <Link
         href={`${item.listingUri}`}
         className="block hover:underline"

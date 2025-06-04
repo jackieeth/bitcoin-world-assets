@@ -9,6 +9,8 @@ import btclogo from "../styles/bitcoin-logo.png";
 import { getBlockImage } from "@/lib/gen-bitfeed";
 import { BlockVisualization } from "@/components/block-visualization";
 import logoMH from "../styles/manh.png";
+import blocksOfSats from "../lib/uncommonBlocksOf.json";
+import uncommonSatribute from "../lib/uncommonSatributes.json";
 
 interface LandingPageProps {
   onSearch: (query: string) => void;
@@ -34,6 +36,7 @@ export function LandingPage({
       blockTime?: string;
       listingUri?: string;
       listedOn?: string;
+      traits?: any[];
     }[]
   >([]);
   const [loading, setLoading] = useState(false);
@@ -96,7 +99,7 @@ export function LandingPage({
     const isMobileSafari =
       /iP(ad|hone|od)/.test(ua) && /WebKit/.test(ua) && !/Chrome/.test(ua);
     if (isMobileSafari) return;
-
+    setLoading(true);
     const fetchLatestListings = async () => {
       try {
         // get latest btc block and price from mempool.space api
@@ -141,13 +144,27 @@ export function LandingPage({
               const sortedSatributes = item.mainSatoshi.sattributes.sort(
                 (a: any, b: any) => a.slug.localeCompare(b.slug),
               );
+
+              let traits: any[] = [];
               for (const sattribue of sortedSatributes) {
                 sattributes += sattribue.slug.toUpperCase() + " ";
+                traits.push(sattribue.slug.toUpperCase());
               }
 
               if (sattributes.includes("INSCRIPTION")) {
                 continue;
               }
+
+              if (uncommonSatribute["size9"].includes(Number(blockNumber))) {
+                traits.push("Size9");
+              }
+              if (uncommonSatribute["bitmap"].includes(Number(blockNumber))) {
+                traits.push(".bitmap");
+              }
+              if (blocksOfSats["blocksOf"].includes(Number(blockNumber))) {
+                traits.push("BlocksOfBitcoin");
+              }
+
               // Only include uncommon sats
               SatBlocks.push({
                 blockNumber: blockNumber,
@@ -157,6 +174,7 @@ export function LandingPage({
                 blockTime: item.mainSatoshi.blockTimestamp,
                 listingUri: `https://magisat.io/listing/${item.id}`,
                 listedOn: "Magisat",
+                traits: traits,
               });
             }
           }
@@ -195,6 +213,20 @@ export function LandingPage({
                   item.rareSatsUtxo.satRanges[0].satributes.sort(
                     (a: string, b: string) => a.localeCompare(b),
                   );
+                let traits: any[] = [];
+                for (const sattribue of sortedSatributes) {
+                  traits.push(sattribue.toUpperCase());
+                }
+
+                if (uncommonSatribute["size9"].includes(Number(blockNumber))) {
+                  traits.push("Size9");
+                }
+                if (uncommonSatribute["bitmap"].includes(Number(blockNumber))) {
+                  traits.push(".bitmap");
+                }
+                if (blocksOfSats["blocksOf"].includes(Number(blockNumber))) {
+                  traits.push("BlocksOfBitcoin");
+                }
                 SatBlocks.push({
                   blockNumber: blockNumber,
                   satStash: item.rareSatsUtxo.satRanges[0].parentFrom,
@@ -204,6 +236,7 @@ export function LandingPage({
                   // listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats?search=${item.rareSatsUtxo.satRanges[0].parentFrom}`,
                   listingUri: `https://magiceden.us/ordinals/marketplace/rare-sats`,
                   listedOn: "MagicEden",
+                  traits: traits,
                 });
               }
             }
@@ -316,10 +349,26 @@ export function LandingPage({
           const sortedSatributes = item.satributes.sort(
             (a: string, b: string) => a.localeCompare(b),
           );
+          let traits: any[] = [];
+
+          for (let index = 0; index < sortedSatributes.length; index++) {
+            traits.push(sortedSatributes[index]);
+          }
+          
+          if (uncommonSatribute["size9"].includes(Number(blockNumber))) {
+            traits.push("Size9");
+          }
+          if (uncommonSatribute["bitmap"].includes(Number(blockNumber))) {
+            traits.push(".bitmap");
+          }
+          if (blocksOfSats["blocksOf"].includes(Number(blockNumber))) {
+            traits.push("BlocksOfBitcoin");
+          }
           SatBlocks.push({
             blockNumber: blockNumber,
             satStash: satStash[0],
             sattributes: sortedSatributes.join(" "),
+            traits: traits,
           });
         }
       }
@@ -381,6 +430,7 @@ export function LandingPage({
             blockTime: sat.blockTime || "",
             listingUri: sat.listingUri || "",
             listedOn: sat.listedOn || "",
+            traits: sat.traits || [],
           })),
         );
         setAwaitGalleryItems(items.sort((a, b) => a.sat - b.sat));
@@ -406,11 +456,13 @@ export function LandingPage({
   return (
     <div className="landing-page flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <div className="mt-20 max-w-5xl space-y-6 transition-all duration-500">
-        <a href="/"><img
-          src={logoMH.src}
-          alt="Manhattan Logo"
-          className="block mx-auto w-32 h-32"
-        /></a>
+        <a href="/">
+          <img
+            src={logoMH.src}
+            alt="Cyber Manhattan Logo"
+            className="block mx-auto w-32 h-32"
+          />
+        </a>
         <div className="flex items-center justify-center">
           <a href="/">
             {/* <img
@@ -425,33 +477,7 @@ export function LandingPage({
           </a>
         </div>
         <p className="mx-auto max-w-[800px] text-m text-white/70 md:text-l">
-          IMMUTABLE DIGITAL WORLD REAL ESTATE
-          <br />
-          <br />
-          <small>
-            Bitcoin World Assets (BWAs) are the <i>root</i> digital world real
-            estate assets natively born with each block of Bitcoin. BWAs are the
-            1st Satoshi (Uncommon Sats) of the BTC BLOCKS based on a tradition
-            that early BTC miners used the 1st satoshis to represent BTC blocks
-            for record-keeping. BWAs can be found as "Uncommon Sats" at
-            marketplaces (e.g.,{" "}
-            <a
-              style={{ textDecoration: "underline" }}
-              href={`https://magiceden.us/ordinals/marketplace/rare-sats`}
-              target="_blank"
-            >
-              Magic Eden
-            </a>
-            ,{" "}
-            <a
-              style={{ textDecoration: "underline" }}
-              href={`https://magisat.io/category/uncommon`}
-              target="_blank"
-            >
-              Magisat
-            </a>
-            ...). How many do you own?
-          </small>
+          TIMELESS DIGITAL WORLD REAL ESTATE
           <br />
           <br />
           {showListings &&
@@ -470,6 +496,41 @@ export function LandingPage({
                 M<br />
               </small>
             )}
+          <br />
+          <small>
+            Bitcoin World Assets (BWAs) are the <i>root</i> digital world real
+            estate assets natively born with each block of Bitcoin. BWAs are
+            immutable
+            <b> miner deeds</b>. BWAs are the 1st Satoshi (Uncommon Sats) of the
+            BTC BLOCKS based on a tradition that early BTC miners used the 1st
+            satoshis of their mined blocks for record-keeping. BWAs can be found
+            as "Uncommon Sats" at marketplaces (e.g.,{" "}
+            <a
+              style={{ textDecoration: "underline" }}
+              href={`https://magiceden.us/ordinals/marketplace/rare-sats`}
+              target="_blank"
+            >
+              Magic Eden
+            </a>
+            ,{" "}
+            <a
+              style={{ textDecoration: "underline" }}
+              href={`https://magisat.io/category/uncommon`}
+              target="_blank"
+            >
+              Magisat
+            </a>
+            ). To build on this immutable digital world foundation at the
+            satoshi level, we have been alpha testing a set of tools based on
+            the Bitcoin Ordinal theory, crosschain infrastructure, and
+            generative AIs.
+          </small>
+          <br />
+          <br />
+          <small>
+            Join as a BWA OG now by inspecting your BTC wallet that contains at
+            least one BWA.
+          </small>
         </p>
 
         <form className="mx-auto flex w-full max-w-3xl items-center space-x-2">
@@ -517,6 +578,7 @@ export function LandingPage({
               itemsData={awaitGalleryItems}
               btcUsdPrice={btcUsdPrice ?? undefined}
               showListings={showListings}
+              bwaHolder={searchQuery}
             />
           )
         )}

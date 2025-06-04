@@ -16,12 +16,12 @@ There have been many digital world projects, many with blockchain ownership toke
 ### How do we define the ownership of BTC blocks? 
 Blocks were mined by miners who achieved and be verified with proof-of-work via btc network consensus. Do miners own the BTC blocks they mined? Miners do own the BTC block rewards from the coinbase transaction (the first tx of the block). Since Bitcoin consists of a network of nodes, all BTC blocks are stored at the node operators' networked machines, relaying transactions. bitmap inscriptions may self-claim the ownership of BTC blocks, but it is arguable.
 
-The **Uncommon Sats** approach is to use the first satoshi of the block to represent the block ownership. In BTC ordinal theory, the first Satoshi of the block is an "uncommon" Satoshi. In the early days of Bitcoin, certain miners were sending the first satoshi to themselves as record-keeping. This may be a more BTC way of characterizing BTC block ownership. To settle this block ownership debate, let us adopt both because the bitmap project contributes from the organic community-building aspect as **social deeds**, and the uncommon sat approach represents the technical details based on how Bitcoin works as **crypto deeds**. 
+The **Uncommon Sats** approach is to use the first satoshi of the block to represent the block ownership. In BTC ordinal theory, the first Satoshi of the block is an "uncommon" Satoshi. In the early days of Bitcoin, certain miners were sending the first satoshi to themselves as record-keeping. This may be a more BTC way of characterizing BTC block ownership. To settle this block ownership debate, let us adopt both because the bitmap project contributes from the organic community-building aspect as **social deeds**, and the uncommon sat approach represents the technical details based on how Bitcoin works as **miner deeds**. 
 
 BTC block ownership _can_ be represented as the following:
 
 - social deeds: `<blockHeight>.bitmap` - FCFS text BTC Ordinals inscriptions up to the current block height. 
-- crypto deeds: `Uncommon Sat` - the first satoshi of the BTC block rewards created by Bitcoin and miner proof of work. We characterize these as _Bitcoin World Assets (BWAs)_.
+- miner deeds: `Uncommon Sat` - the first satoshi of the BTC block rewards created by Bitcoin and miner proof of work. We characterize these as _Bitcoin World Assets (BWAs)_.
 
 ### How to build digital worlds with BWAs? 
 Current digital assets are arranged in unstructured and arbitrary ways. Organizing digital assets as a personal collectible gallery was popular in 2021 due to the NFT boom. Here, we suggest a 3D world-building approach to organizing digital assets with 3d representation methods based on the Bitcoin block layouts (the BitFeed representation). We provide a direct download link for each block's 3d data for world builders to integrate BWAs in 3D apps like games.
