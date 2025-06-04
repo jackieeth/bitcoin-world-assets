@@ -5,7 +5,7 @@ import Ordiscan from "ordiscan";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useParams } from "next/navigation";
-import { v4 as uuidv4 } from "uuid";
+
 import {
   updateAnimations,
   getBlockImage,
@@ -14,6 +14,11 @@ import {
 import blocksOfSats from "../../../lib/uncommonBlocksOf.json";
 import uncommonSatribute from "../../../lib/uncommonSatributes.json";
 import { setupLights, createMMLStructure } from "../../../lib/blockUtils";
+
+const generateId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : "_" + Math.random().toString(36).substr(2, 9);
 
 //-----------------------------------------------------------------
 // BlockPage: 3‑D block explorer + multiplayer cubes w/ nameplates
@@ -39,7 +44,7 @@ export default function BlockPage() {
 
   const params = useParams();
   const blockHeight = params.blockHeight as string | undefined;
-  const [playerId] = useState<string>(() => uuidv4());
+  const [playerId] = useState<string>(() => generateId());
   const [playerName] = useState<string>(() => `player${Math.floor(1000 + Math.random() * 9000)}`);
   const [connected, setConnected] = useState(false);
 
@@ -91,7 +96,7 @@ export default function BlockPage() {
 
     //------------------- local cube
     const playerMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.BoxGeometry(0.5, 0.5, 0.5),
       new THREE.MeshStandardMaterial({ color: 0xffa200 }),
     );
     playerMesh.castShadow = true;
@@ -100,6 +105,13 @@ export default function BlockPage() {
     playerMeshRef.current = playerMesh;
 
     playerLabelRef.current = makeLabel(playerName);
+    // Create and attach a smaller cube under the main cube
+    const smallCube = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.3, 0.3),
+      new THREE.MeshStandardMaterial({ color: 0xffa200 })
+    );
+    smallCube.position.set(0, -0.5, 0);
+    playerMesh.add(smallCube);
 
     //------------------- world + lights
     setupLights(scene);
@@ -223,12 +235,18 @@ export default function BlockPage() {
         if (id === playerId) return;
         let remote = remotePlayersRef.current.get(id);
         if (!remote) {
-          const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "orange", transparent: true, opacity: 0.8 }));
+          const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({ color: "orange", transparent: true, opacity: 0.7 }));
           mesh.castShadow = true;
           sceneRef.current?.add(mesh);
           const label = makeLabel(p.name ?? id.slice(-4));
           remote = { mesh, label, targetPos: new THREE.Vector3() };
           remotePlayersRef.current.set(id, remote);
+          const smallCube = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.3, 0.3),
+            new THREE.MeshStandardMaterial({ color: "orange", transparent: true, opacity: 0.7 })
+          );
+          smallCube.position.set(0, -0.5, 0);
+          mesh.add(smallCube);
         }
         remote.label.textContent = p.name ?? id.slice(-4);
         remote.targetPos.set(p.x, p.y, p.z);
