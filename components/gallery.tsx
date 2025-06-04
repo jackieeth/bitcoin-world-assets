@@ -12,6 +12,7 @@ export type Item = {
   title: string;
   description: string;
   category: string;
+  traits:any[];
   image: string;
   date: string;
   sat: number;
