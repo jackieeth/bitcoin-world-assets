@@ -72,7 +72,7 @@ export default function BlockPage() {
       0.1,
       1000,
     );
-    camera.position.set(0, 5, 10);
+    camera.position.set(0, 3, 6);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -106,6 +106,7 @@ export default function BlockPage() {
       new THREE.MeshStandardMaterial({ color: 0xffa200 }),
     );
     smallCube.position.set(0, -0.5, 0);
+    smallCube.castShadow = true;
     playerMesh.add(smallCube);
 
     //------------------- world + lights
@@ -139,7 +140,7 @@ export default function BlockPage() {
 
     //------------------- movement helpers (3rd‑person flying)
     const clock = new THREE.Clock();
-    const speed = 10; // units per second
+    const speed = 6; // units per second
 
     const smoothRemotes = (dt: number) => {
       const alpha = 1 - Math.exp(-dt * 10);
@@ -254,6 +255,7 @@ export default function BlockPage() {
             new THREE.MeshStandardMaterial({ color: "orange", transparent: true, opacity: 0.7 }),
           );
           smallCube.position.set(0, -0.5, 0);
+          smallCube.castShadow = true;
           mesh.add(smallCube);
         }
         remote.label.textContent = p.name ?? id.slice(-4);
