@@ -19,9 +19,9 @@ import {
 } from "lucide-react";
 
 interface GalleryControlsProps {
-  categories: string[];
-  activeCategory: string;
-  onCategoryChange: (category: string) => void;
+  allTraits: string[];
+  selectedTraits: string[];
+  onTraitChange: (trait: string) => void;
   sortBy: SortOption;
   onSortChange: (option: SortOption) => void;
   gridConfig: GridConfig;
@@ -29,9 +29,9 @@ interface GalleryControlsProps {
 }
 
 export function GalleryControls({
-  categories,
-  activeCategory,
-  onCategoryChange,
+  allTraits,
+  selectedTraits,
+  onTraitChange,
   sortBy,
   onSortChange,
   gridConfig,
@@ -40,17 +40,22 @@ export function GalleryControls({
   return (
     <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-4">
       <div className="flex flex-wrap gap-2">
-        {categories.map((category) => (
-          <Button
-            key={category}
-            variant={activeCategory === category ? "default" : "outline"}
-            size="sm"
-            onClick={() => onCategoryChange(category)}
-            className="text-xs uppercase tracking-wider"
-          >
-            {category}
-          </Button>
-        ))}
+        {allTraits.map((trait) => {
+          if (trait !== "UNCOMMON") {
+            return (
+              <Button
+                key={trait}
+                variant={selectedTraits.includes(trait) ? "default" : "outline"}
+                size="sm"
+                onClick={() => onTraitChange(trait)}
+                className="text-xs uppercase tracking-wider"
+              >
+                {trait}
+              </Button>
+            );
+          }
+          return null;
+        })}
       </div>
 
       <div className="flex items-center space-x-2">
