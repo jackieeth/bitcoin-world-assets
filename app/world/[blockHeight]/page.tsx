@@ -13,17 +13,13 @@ import {
 } from "../../../lib/gen-bitfeed";
 import blocksOfSats from "../../../lib/uncommonBlocksOf.json";
 import uncommonSatribute from "../../../lib/uncommonSatributes.json";
-import { setupLights, createMMLStructure } from "../../../lib/blockUtils";
-
-const generateId = () =>
-  typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : "_" + Math.random().toString(36).substr(2, 9);
-
-//-----------------------------------------------------------------
-// BlockPage: 3‑D block explorer + multiplayer cubes w/ nameplates
-// Name scheme: "player" + 4 random digits (e.g. player 4721)
-//-----------------------------------------------------------------
+import {
+  setupLights,
+  createMMLStructure,
+  generateId,
+  makeLabel,
+  updateLabel,
+} from "../../../lib/blockUtils";
 
 interface RemotePlayer {
   mesh: THREE.Mesh;
@@ -45,7 +41,9 @@ export default function BlockPage() {
   const params = useParams();
   const blockHeight = params.blockHeight as string | undefined;
   const [playerId] = useState<string>(() => generateId());
-  const [playerName] = useState<string>(() => `player${Math.floor(1000 + Math.random() * 9000)}`);
+  const [playerName] = useState<string>(
+    () => `player${Math.floor(1000 + Math.random() * 9000)}`,
+  );
   const [connected, setConnected] = useState(false);
 
   const [blockImageUrl, setBlockImageUrl] = useState<string>("");
@@ -59,16 +57,6 @@ export default function BlockPage() {
   } | null>(null);
 
   if (!blockHeight) return null;
-
-  // =============== helper DOM label ================
-  const makeLabel = (text: string) => {
-    const div = document.createElement("div");
-    div.textContent = text;
-    div.className =
-      "text-xs font-medium text-white drop-shadow-lg absolute select-none";
-    labelsRef.current!.appendChild(div);
-    return div;
-  };
 
   // =============== THREE scene initialisation ================
   useEffect(() => {
@@ -104,11 +92,11 @@ export default function BlockPage() {
     scene.add(playerMesh);
     playerMeshRef.current = playerMesh;
 
-    playerLabelRef.current = makeLabel(playerName);
+    playerLabelRef.current = makeLabel(playerName, labelsRef.current);
     // Create and attach a smaller cube under the main cube
     const smallCube = new THREE.Mesh(
       new THREE.BoxGeometry(0.3, 0.3, 0.3),
-      new THREE.MeshStandardMaterial({ color: 0xffa200 })
+      new THREE.MeshStandardMaterial({ color: 0xffa200 }),
     );
     smallCube.position.set(0, -0.5, 0);
     playerMesh.add(smallCube);
@@ -130,22 +118,6 @@ export default function BlockPage() {
       setParcelStats,
     );
 
-    //------------------- helpers
-    const project = (pos: THREE.Vector3) => {
-      const p = pos.clone().project(camera);
-      return { x: (p.x * 0.5 + 0.5) * window.innerWidth, y: (-p.y * 0.5 + 0.5) * window.innerHeight, hide: p.z > 1 };
-    };
-
-    const updateLabel = (mesh: THREE.Mesh, label: HTMLDivElement) => {
-      const { x, y, hide } = project(mesh.position);
-      if (hide) {
-        label.style.display = "none";
-      } else {
-        label.style.display = "block";
-        label.style.transform = `translate(-50%, -50%) translate(${x}px, ${y - 18}px)`;
-      }
-    };
-
     //------------------- event handlers
     const onResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -153,8 +125,10 @@ export default function BlockPage() {
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
     window.addEventListener("resize", onResize);
-    const onKeyDown = (e: KeyboardEvent) => (keysPressedRef.current[e.code] = true);
-    const onKeyUp = (e: KeyboardEvent) => (keysPressedRef.current[e.code] = false);
+    const onKeyDown = (e: KeyboardEvent) =>
+      (keysPressedRef.current[e.code] = true);
+    const onKeyUp = (e: KeyboardEvent) =>
+      (keysPressedRef.current[e.code] = false);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
@@ -167,7 +141,7 @@ export default function BlockPage() {
       const alpha = 1 - Math.exp(-dt * 10);
       remotePlayersRef.current.forEach(({ mesh, targetPos, label }) => {
         mesh.position.lerp(targetPos, alpha);
-        updateLabel(mesh, label,);
+        updateLabel(mesh, label, camera);
       });
     };
 
@@ -178,13 +152,22 @@ export default function BlockPage() {
       if (keysPressedRef.current["KeyA"]) m.x -= 1;
       if (keysPressedRef.current["KeyD"]) m.x += 1;
       if (keysPressedRef.current["Space"]) m.y += 1;
-      if (keysPressedRef.current["ShiftLeft"] || keysPressedRef.current["ShiftRight"]) m.y -= 1;
-      if (m.lengthSq() > 0) playerMesh.position.add(m.normalize().multiplyScalar(dt * speed));
+      if (
+        keysPressedRef.current["ShiftLeft"] ||
+        keysPressedRef.current["ShiftRight"]
+      )
+        m.y -= 1;
+      if (m.lengthSq() > 0)
+        playerMesh.position.add(m.normalize().multiplyScalar(dt * speed));
 
       // send position
       if (socketRef.current?.readyState === WebSocket.OPEN) {
         socketRef.current.send(
-          JSON.stringify({ type: "update", id: playerId, pos: playerMesh.position }),
+          JSON.stringify({
+            type: "update",
+            id: playerId,
+            pos: playerMesh.position,
+          }),
         );
       }
 
@@ -193,7 +176,8 @@ export default function BlockPage() {
       camera.lookAt(playerMesh.position);
 
       // label
-      if (playerLabelRef.current) updateLabel(playerMesh, playerLabelRef.current);
+      if (playerLabelRef.current)
+        updateLabel(playerMesh, playerLabelRef.current, camera);
     };
 
     const animate = () => {
@@ -219,7 +203,9 @@ export default function BlockPage() {
   // =============== WebSocket connection ================
   useEffect(() => {
     if (!connected) return;
-    const wsUrl = (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080") + `?room=${blockHeight}`;
+    const wsUrl =
+      (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080") +
+      `?room=${blockHeight}`;
     const ws = new WebSocket(wsUrl);
     socketRef.current = ws;
 
@@ -230,27 +216,43 @@ export default function BlockPage() {
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data);
       if (data.type !== "state") return;
-      const playersState: Record<string, { x: number; y: number; z: number; name?: string }> = data.players;
+      const playersState: Record<
+        string,
+        { x: number; y: number; z: number; name?: string }
+      > = data.players;
       Object.entries(playersState).forEach(([id, p]) => {
         if (id === playerId) return;
         let remote = remotePlayersRef.current.get(id);
         if (!remote) {
-          const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({ color: "orange", transparent: true, opacity: 0.7 }));
+          if (!labelsRef.current) return;
+          const mesh = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5, 0.5, 0.5),
+            new THREE.MeshStandardMaterial({
+              color: "orange",
+              transparent: true,
+              opacity: 0.7,
+            }),
+          );
           mesh.castShadow = true;
           sceneRef.current?.add(mesh);
-          const label = makeLabel(p.name ?? id.slice(-4));
+          const label = makeLabel(p.name ?? id.slice(-4), labelsRef.current);
           remote = { mesh, label, targetPos: new THREE.Vector3() };
           remotePlayersRef.current.set(id, remote);
           const smallCube = new THREE.Mesh(
             new THREE.BoxGeometry(0.3, 0.3, 0.3),
-            new THREE.MeshStandardMaterial({ color: "orange", transparent: true, opacity: 0.7 })
+            new THREE.MeshStandardMaterial({
+              color: "orange",
+              transparent: true,
+              opacity: 0.7,
+            }),
           );
           smallCube.position.set(0, -0.5, 0);
           mesh.add(smallCube);
         }
         remote.label.textContent = p.name ?? id.slice(-4);
         remote.targetPos.set(p.x, p.y, p.z);
-        if (remote.mesh.position.lengthSq() === 0) remote.mesh.position.copy(remote.targetPos);
+        if (remote.mesh.position.lengthSq() === 0)
+          remote.mesh.position.copy(remote.targetPos);
       });
 
       // remove stale
@@ -274,11 +276,14 @@ export default function BlockPage() {
     return () => ws.close();
   }, [connected, blockHeight, playerId, playerName]);
 
-  // =============== data‑fetching effects (unchanged) ================
+  // =============== data‑fetching effects ================
   useEffect(() => {
     if (!blockHeight) return;
     (async () => {
-      const url = await getBlockImage(Number(blockHeight), process.env.NEXT_PUBLIC_BLOCKIMAGE_URL || "");
+      const url = await getBlockImage(
+        Number(blockHeight),
+        process.env.NEXT_PUBLIC_BLOCKIMAGE_URL || "",
+      );
       setBlockImageUrl(url);
     })();
   }, [blockHeight]);
@@ -288,17 +293,27 @@ export default function BlockPage() {
     (async () => {
       const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
       if (!apiKey) return;
-      const sat = await new Ordiscan(apiKey).sat.getInfo(Block1stSat(Number(blockHeight)));
-      setSatInfo({ ...sat, rarity: sat.satributes.sort((a: string, b: string) => a.localeCompare(b)).join(" ") });
+      const sat = await new Ordiscan(apiKey).sat.getInfo(
+        Block1stSat(Number(blockHeight)),
+      );
+      setSatInfo({
+        ...sat,
+        rarity: sat.satributes
+          .sort((a: string, b: string) => a.localeCompare(b))
+          .join(" "),
+      });
     })();
   }, [blockHeight]);
 
   useEffect(() => {
     if (!blockHeight) return;
     const traits: string[] = [];
-    if (uncommonSatribute["size9"].includes(Number(blockHeight))) traits.push("Size9");
-    if (uncommonSatribute["bitmap"].includes(Number(blockHeight))) traits.push(".bitmap");
-    if (blocksOfSats["blocksOf"].includes(Number(blockHeight))) traits.push("BlocksOfBitcoin");
+    if (uncommonSatribute["size9"].includes(Number(blockHeight)))
+      traits.push("Size9");
+    if (uncommonSatribute["bitmap"].includes(Number(blockHeight)))
+      traits.push(".bitmap");
+    if (blocksOfSats["blocksOf"].includes(Number(blockHeight)))
+      traits.push("BlocksOfBitcoin");
     setTraitLine(traits.join(" ").trim());
   }, [blockHeight]);
 
@@ -317,19 +332,27 @@ export default function BlockPage() {
         {blockHeight ? `BLOCK ${blockHeight}` : "Loading..."}
         <br />
         <span className="text-xs text-slate-400">
-          {satInfo.rarity && <span className="text-gray-300">{satInfo.rarity}</span>}
+          {satInfo.rarity && (
+            <span className="text-gray-300">{satInfo.rarity}</span>
+          )}
           <br />
           SAT #{Block1stSat(Number(blockHeight))}
           {traitLine && (
             <span className="text-gray-300">
-              <br />Traits: {traitLine}
+              <br />
+              Traits: {traitLine}
             </span>
           )}
-          <br />Mined: {satInfo.creation_date}
+          <br />
+          Mined: {satInfo.creation_date}
         </span>
 
         {blockImageUrl && (
-          <a href={`https://bitfeed.live/block/height/${blockHeight}`} target="_blank" className="block mt-2">
+          <a
+            href={`https://bitfeed.live/block/height/${blockHeight}`}
+            target="_blank"
+            className="block mt-2"
+          >
             <img
               src={blockImageUrl}
               onLoad={() => setImgLoaded(true)}
@@ -338,7 +361,6 @@ export default function BlockPage() {
           </a>
         )}
 
-       
         {/* Enter World */}
         {!connected && (
           <button
@@ -349,8 +371,6 @@ export default function BlockPage() {
           </button>
         )}
       </div>
-
-      
     </main>
   );
 }

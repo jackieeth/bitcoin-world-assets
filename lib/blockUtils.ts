@@ -1,6 +1,45 @@
 import * as THREE from "three";
 import { genBitFeedMml, processXMLNode } from "./gen-bitfeed";
 
+//------------------- helpers
+const project = (pos: THREE.Vector3, camera: THREE.PerspectiveCamera) => {
+  const p = pos.clone().project(camera);
+  return {
+    x: (p.x * 0.5 + 0.5) * window.innerWidth,
+    y: (-p.y * 0.5 + 0.5) * window.innerHeight,
+    hide: p.z > 1,
+  };
+};
+
+export const updateLabel = (
+  mesh: THREE.Mesh,
+  label: HTMLDivElement,
+  camera: THREE.PerspectiveCamera,
+) => {
+  const { x, y, hide } = project(mesh.position, camera);
+  if (hide) {
+    label.style.display = "none";
+  } else {
+    label.style.display = "block";
+    label.style.transform = `translate(-50%, -50%) translate(${x}px, ${y - 18}px)`;
+  }
+};
+
+export const makeLabel = (text: string, container: HTMLElement) => {
+  const div = document.createElement("div");
+  div.textContent = text;
+  div.className =
+    "text-xs font-medium text-white drop-shadow-lg absolute select-none";
+  container.appendChild(div);
+  return div;
+};
+
+export function generateId() {
+  return typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : "_" + Math.random().toString(36).substr(2, 9);
+}
+
 // Download file utility
 export function downloadFile(filename: string, content: string) {
   const blob = new Blob([content], { type: "text/plain" });
