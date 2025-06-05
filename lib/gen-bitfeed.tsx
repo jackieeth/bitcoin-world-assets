@@ -1,6 +1,7 @@
 import format from "xml-formatter";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import {deterministicRandom} from "./blockUtils"
 
 // Global cache for JSON content keyed by part
 const blockJsonCache = new Map<number, any>();
@@ -867,7 +868,11 @@ export const genBitFeedMml = async (
   let parcelsMML = "";
   const parcelSizeCounts: { [key: number]: number } = {}; // Count each parcel size
   let placeModel = true;
-  const modelWillAppear = Math.random() > 0.7; // Randomly decide if a model will appear
+  const now = new Date();
+  const day = ("0" + now.getDate()).slice(-2);
+  const hour = ("0" + now.getHours()).slice(-2);
+  const minute = ("0" + now.getMinutes()).slice(-2);
+  const modelWillAppear = deterministicRandom(`${day}-${hour}-${minute}`) > 0.6; // Randomly decide if a model will appear
 
   for (let i = 0; i < txList.length; i++) {
     const slot = mondrian.place(txList[i].size);
@@ -883,12 +888,12 @@ export const genBitFeedMml = async (
       }" x="${(slot.position.x + slot.r - blockWidth / 2) * size - margin * slot.r}" y="${(0.1 * slot.r) / 2}" z="${
         (slot.position.y + slot.r - blockWidth / 2) * size - margin * slot.r
       }" color="${parcelColor}">${
-        Math.random() > 0.95
+        deterministicRandom(`b${i}${minute}`) > 0.995
           ? `<m-attr-anim attr="y" start="0.5" end="${
-              0.5 + Math.floor(Math.random() * 7)
+              0.2 + Math.floor(deterministicRandom(`q${i}`) * 2.1) + Math.floor(deterministicRandom(`a${minute}`) * 1.2)
             }" start-time="2000" duration="${
-              5000 + Math.floor(Math.random() * 5000)
-            }" ping-pong="true" ping-pong-delay="1000"></m-attr-anim>`
+              5000 + Math.floor(deterministicRandom(`q${i}${minute}`) * 200)
+            }" ping-pong="true" ping-pong-delay="2000"></m-attr-anim>`
           : ``
       } ${slot.r === 5 && placeModel && modelWillAppear ? `<m-model src="https://quark20a.s3.us-west-1.amazonaws.com/q/1377952728323592342_1748599938.glb" x="0" y=".5" z="0" sx=".5" sy=".5" sz=".5"> </m-model>
 `: ``}</m-cube>`;

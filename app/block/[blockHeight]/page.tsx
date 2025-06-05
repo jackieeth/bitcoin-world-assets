@@ -12,7 +12,7 @@ import {
 } from "../../../lib/gen-bitfeed";
 import blocksOfSats from "../../../lib/uncommonBlocksOf.json";
 import uncommonSatribute from "../../../lib/uncommonSatributes.json";
-import { downloadFile, setupLights, createMMLStructure } from "./blockUtils";
+import { downloadFile, setupLights, createMMLStructure } from "../../../lib/blockUtils";
 
 export default function BlockPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -24,7 +24,6 @@ export default function BlockPage() {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [xmlContent, setXmlDoc] = useState<string>("");
   const [traitLine, setTraitLine] = useState<string>("");
-  // New state for parcel stats
   const [parcelStats, setParcelStats] = useState<{
     counts: Record<string, number>;
     total: number;
@@ -214,7 +213,24 @@ export default function BlockPage() {
             </div>
           </div>
         )}
+
+        
       </div>
+      {satInfo.inscription_ids && satInfo.inscription_ids.length > 0 && (
+          <div className="text-xs absolute bottom-6 left-4">
+            <strong>BTC Ordinal Inscriptions:</strong>
+            <br />
+            {satInfo.inscription_ids.map((id:string) => (
+              <div key={"inscription-"+id}>
+                <a target="_blank"
+            style={{ textDecoration: "underline" }}
+            href={`https://ordiscan.com/inscription/${id}`}
+          >{id}</a>
+              </div>
+            ))}
+            
+          </div>
+        )}
     </main>
   );
 }

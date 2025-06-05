@@ -19,7 +19,7 @@ interface LandingPageProps {
 
 function shortenString(str: string): string {
   if (str.length <= 12) return str; // If the string is already short, return it as is
-  return `${str.slice(0, 6)}...${str.slice(-6)}`;
+  return `${str.slice(0, 4)}...${str.slice(-4)}`;
 }
 
 export function LandingPage({
@@ -47,7 +47,7 @@ export function LandingPage({
   const hasSearchedRef = useRef(false); // guard for initial paste handling
   const [justPasted, setJustPasted] = useState(false);
   const [latestHolders, setLatestHolders] = useState<
-    { address: string; satDataLength: number; lastUpdate: number }[]
+    { address: string; satDataLength: number; lastUpdate: number; blk: number }[]
   >([]);
   const [uncommonFloorPrice, setUncommonFloorPrice] = useState<number | null>(
     null,
@@ -165,6 +165,8 @@ export function LandingPage({
                 traits.push("BlocksOfBitcoin");
               }
 
+              traits.push(`${blockNumber.toString().length}D`)
+
               // Only include uncommon sats
               SatBlocks.push({
                 blockNumber: blockNumber,
@@ -227,6 +229,7 @@ export function LandingPage({
                 if (blocksOfSats["blocksOf"].includes(Number(blockNumber))) {
                   traits.push("BlocksOfBitcoin");
                 }
+                traits.push(`${blockNumber.toString().length}D`)
                 SatBlocks.push({
                   blockNumber: blockNumber,
                   satStash: item.rareSatsUtxo.satRanges[0].parentFrom,
@@ -364,6 +367,7 @@ export function LandingPage({
           if (blocksOfSats["blocksOf"].includes(Number(blockNumber))) {
             traits.push("BlocksOfBitcoin");
           }
+          traits.push(`${blockNumber.toString().length}D`)
           SatBlocks.push({
             blockNumber: blockNumber,
             satStash: satStash[0],
@@ -550,7 +554,9 @@ export function LandingPage({
         </form>
 
         {loading ? (
-          <div className="flex justify-center items-center mb-4">
+          <div className="flex flex-col justify-center items-center mb-4">
+            {showListings && <div className="text-gray-300 mt-4 mb-6">
+          Processing marketplace data...</div>}
             <svg
               className="animate-spin h-8 w-8 text-white"
               xmlns="http://www.w3.org/2000/svg"
@@ -589,15 +595,15 @@ export function LandingPage({
 
       {latestHolders.length > 0 ? (
         <div className="text-gray-300 mt-8">
-          - Latest BWA holders -<br />
+          - <b>Latest BWA holders</b> -<br />
           {latestHolders.map((holder, index) => (
-            <small key={`b-${index}`}>
+            <small key={`b-${index}`}>{holder.blk < 100000 ? <small>BLOCK {holder.blk}{` Holder: `}</small>:``} 
               <a href={`/address/${holder.address}`}>
-                {shortenString(holder.address)}
+                <b>{shortenString(holder.address)}</b>
               </a>
 
-              {`: `}
-              {holder.satDataLength}
+              {` `}
+              <b style={{"fontSize": "1.2em"}}>{holder.satDataLength}</b> 
               <br />
             </small>
           ))}

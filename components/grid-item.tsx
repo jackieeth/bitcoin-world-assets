@@ -19,7 +19,11 @@ function extractYearMonth(dateString: string) {
 
 export function GridItem({ item, btcUsdPrice }: GridItemProps) {
 
-  const traitLine = item.traits.join(" ").replace("UNCOMMON", "").replace("ALPHA", "").trim()
+  const traitLine = item.traits.join(" ")
+  .replace("UNCOMMON", "")
+  .replace("ALPHA", "")
+  .replace(/\b(?:1D|2D|3D|4D|5D|6D|7D)\b/g, "")
+  .trim()
   return (
     <div className={item.description.includes("ALPHA") ? "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-lg transition-all hover:border-white/50" : "grid-item group relative overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm transition-all hover:border-white/50"}>
       
