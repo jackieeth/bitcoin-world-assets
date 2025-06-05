@@ -55,9 +55,23 @@ export function Gallery({
 
   // Handle trait filter change (toggle trait selection)
   const handleTraitChange = (trait: string) => {
-    setSelectedTraits((prev) =>
-      prev.includes(trait) ? prev.filter((t) => t !== trait) : [...prev, trait],
-    );
+    setSelectedTraits((prev) => {
+      const exclusiveTraits = ["1D", "2D", "3D", "4D", "5D", "6D", "7D"];
+
+      // If the trait is already selected, deselect it.
+      if (prev.includes(trait)) {
+        return prev.filter((t) => t !== trait);
+      }
+
+      // If the trait is in the exclusive group, remove any other exclusive trait.
+      if (exclusiveTraits.includes(trait)) {
+        const filtered = prev.filter((t) => !exclusiveTraits.includes(t));
+        return [...filtered, trait];
+      }
+
+      // Otherwise, add the trait normally.
+      return [...prev, trait];
+    });
   };
 
   // Handle sort change
