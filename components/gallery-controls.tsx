@@ -1,6 +1,6 @@
 "use client";
 
-import type { GridConfig, SortOption } from "@/components/gallery";
+import type { SortOption } from "@/components/gallery";
 import { Button } from "@/components/ui/button";
 import {
   Select,
