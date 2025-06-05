@@ -58,6 +58,7 @@ export default function BlockPage() {
   const [blockImageUrl, setBlockImageUrl] = useState<string>("");
   const [satInfo, setSatInfo] = useState<any>({});
   const [imgLoaded, setImgLoaded] = useState(false);
+   const [Entering, setIsEntering] = useState(false);
   const [xmlContent, setXmlDoc] = useState<string>("");
   const [traitLine, setTraitLine] = useState<string>("");
 
@@ -223,63 +224,89 @@ export default function BlockPage() {
     };
 
     const updateLocal = (dt: number) => {
-      const moveInput = new THREE.Vector3();
-      if (keysPressedRef.current["KeyW"]) moveInput.z += 1;
-      if (keysPressedRef.current["KeyS"]) moveInput.z -= 1;
-      if (keysPressedRef.current["KeyA"]) moveInput.x -= 1;
-      if (keysPressedRef.current["KeyD"]) moveInput.x += 1;
-      if (keysPressedRef.current["Space"]) moveInput.y += 1;
-      if (
-        keysPressedRef.current["ShiftLeft"] ||
-        keysPressedRef.current["ShiftRight"]
-      )
-        moveInput.y -= 1;
+    const moveInput = new THREE.Vector3();
+    if (keysPressedRef.current["KeyW"]) moveInput.z += 1;
+    if (keysPressedRef.current["KeyS"]) moveInput.z -= 1;
+    if (keysPressedRef.current["KeyA"]) moveInput.x -= 1;
+    if (keysPressedRef.current["KeyD"]) moveInput.x += 1;
+    if (keysPressedRef.current["Space"]) moveInput.y += 1;
+    if (
+      keysPressedRef.current["ShiftLeft"] ||
+      keysPressedRef.current["ShiftRight"]
+    )
+      moveInput.y -= 1;
 
-      if (moveInput.lengthSq() > 0) {
-        moveInput.normalize();
+    if (moveInput.lengthSq() > 0) {
+      moveInput.normalize();
 
-        // camera‑relative directions
-        const forward = new THREE.Vector3();
-        camera.getWorldDirection(forward);
-        forward.y = 0; // keep movement horizontal relative to ground
-        forward.normalize();
+      // camera‑relative directions
+      const forward = new THREE.Vector3();
+      camera.getWorldDirection(forward);
+      forward.y = 0;
+      forward.normalize();
 
-        const right = new THREE.Vector3();
-        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+      const right = new THREE.Vector3();
+      right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-        const worldMove = new THREE.Vector3();
-        worldMove.addScaledVector(forward, moveInput.z);
-        worldMove.addScaledVector(right, moveInput.x);
-        worldMove.addScaledVector(new THREE.Vector3(0, 1, 0), moveInput.y);
+      const worldMove = new THREE.Vector3();
+      worldMove.addScaledVector(forward, moveInput.z);
+      worldMove.addScaledVector(right, moveInput.x);
+      worldMove.addScaledVector(new THREE.Vector3(0, 1, 0), moveInput.y);
 
-        // Calculate the proposed new position
-        const dtSpeed = dt * speed;
-        const currentPos = playerMesh.position.clone();
-        const nextPos = currentPos.add(worldMove.clone().multiplyScalar(dtSpeed));
+      const dtSpeed = dt * speed;
+      const currentPos = playerMesh.position.clone();
+      const nextPos = currentPos.add(worldMove.clone().multiplyScalar(dtSpeed));
 
-        // Only update if no collision is detected
-        if (!checkCollision(nextPos)) {
-          playerMesh.position.copy(nextPos);
+      if (!checkCollision(nextPos)) {
+        // No collision: update normally.
+        playerMesh.position.copy(nextPos);
+      } else {
+        // Collision detected: push avatar out.
+        let pushDir = new THREE.Vector3();
+        const playerBox = new THREE.Box3().setFromObject(playerMesh);
+        objectsRef.current.forEach((child) => {
+          // Skip the player and its direct children.
+          if (child === playerMesh || child.parent === playerMesh) return;
+          if (child instanceof THREE.Mesh && child.geometry) {
+            child.updateMatrixWorld(true);
+            const childBox = new THREE.Box3().setFromObject(child);
+            if (playerBox.intersectsBox(childBox)) {
+              // Compute the center of the colliding object.
+              const childCenter = new THREE.Vector3();
+              childBox.getCenter(childCenter);
+              const dir = playerMesh.position.clone().sub(childCenter);
+              if (dir.lengthSq() > 0) {
+                pushDir.add(dir.normalize());
+              }
+            }
+          }
+        });
+        if (pushDir.lengthSq() > 0) {
+          // Adjust pushStrength as needed.
+          const pushStrength = .1;
+          pushDir.normalize();
+          playerMesh.position.add(pushDir.multiplyScalar(pushStrength));
         }
       }
+    }
 
-      // broadcast position to server
-      if (socketRef.current?.readyState === WebSocket.OPEN) {
-        socketRef.current.send(
-          JSON.stringify({
-            type: "update",
-            id: playerId,
-            pos: playerMesh.position,
-          }),
-        );
-      }
+    // broadcast position to server
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(
+        JSON.stringify({
+          type: "update",
+          id: playerId,
+          pos: playerMesh.position,
+        }),
+      );
+    }
 
-      // label follow
-      if (playerLabelRef.current && connectedRef.current) {
-        updateLabel(playerMesh, playerLabelRef.current, camera);
-        playerLabelRef.current.style.display = "block";
-      }
-    };
+    // label follow
+    if (playerLabelRef.current && connectedRef.current) {
+      updateLabel(playerMesh, playerLabelRef.current, camera);
+      playerLabelRef.current.style.display = "block";
+    }
+};
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -448,6 +475,7 @@ export default function BlockPage() {
   }, [blockHeight]);
 
   const checkMember = async () => {
+    setIsEntering(true);
     const res = await window.XverseProviders.BitcoinProvider.request(
       "getAccounts",
       {
@@ -482,6 +510,7 @@ export default function BlockPage() {
       }
       setConnected(true);
     }
+    setIsEntering(false);
   };
 
   // =============== JSX layout ================
@@ -531,9 +560,9 @@ export default function BlockPage() {
         { xverseAvailable && !connected && (
           <div><br/><button
             onClick={checkMember}
-            className="mt-6 px-4 py-1.5 text-white text-xs rounded hover:bg-gray-500 border border-white transition-colors"
+            className="mt-6 w-60 px-4 py-1.5 text-white text-xs rounded hover:bg-gray-500 border border-white transition-colors"
           >
-            Enter Bitcoin World {blockHeight}
+            {Entering ? "Entering...":<span>Enter Bitcoin World {blockHeight}</span>}
           </button></div>
         )}
       </div>
