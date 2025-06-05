@@ -35,6 +35,7 @@ export default function BlockPage() {
   const playerMeshRef = useRef<THREE.Mesh>(null);
   const playerLabelRef = useRef<HTMLDivElement>(null);
   const remotePlayersRef = useRef<Map<string, RemotePlayer>>(new Map());
+  
   const socketRef = useRef<WebSocket | null>(null);
   const keysPressedRef = useRef<Record<string, boolean>>({});
 
@@ -55,6 +56,10 @@ export default function BlockPage() {
     counts: Record<string, number>;
     total: number;
   } | null>(null);
+  const connectedRef = useRef(connected);
+    useEffect(() => {
+      connectedRef.current = connected;
+    }, [connected]);
 
   if (!blockHeight) return null;
 
@@ -94,11 +99,13 @@ export default function BlockPage() {
       new THREE.MeshStandardMaterial({ color: 0xffa200 }),
     );
     playerMesh.castShadow = true;
-    playerMesh.position.set(0, 2, 0);
+    playerMesh.position.set(Math.random() * 5 - 2.5, 2, Math.random() * 5 - 2.5);
+    playerMesh.visible = false; // hide until entering the world
     scene.add(playerMesh);
     playerMeshRef.current = playerMesh;
 
     playerLabelRef.current = makeLabel(playerName, labelsRef.current);
+    playerLabelRef.current.style.display = "none";
 
     // decorative small cube under main cube
     const smallCube = new THREE.Mesh(
@@ -191,7 +198,11 @@ export default function BlockPage() {
       }
 
       // label follow
-      if (playerLabelRef.current) updateLabel(playerMesh, playerLabelRef.current, camera);
+      if (playerLabelRef.current && connectedRef.current) {
+        updateLabel(playerMesh, playerLabelRef.current, camera);
+        playerLabelRef.current.style.display = "block";
+      }
+      
     };
 
     const animate = () => {
@@ -218,6 +229,15 @@ export default function BlockPage() {
       renderer.dispose();
     };
   }, [blockHeight, playerId, playerName]);
+
+  useEffect(() => {
+    if (playerMeshRef.current) {
+        playerMeshRef.current.visible = connected;
+    }
+    if (playerLabelRef.current) {
+        playerLabelRef.current.style.display = connected ? "block" : "none";
+    }
+}, [connected]);
 
   // =============== WebSocket connection ================
   useEffect(() => {
