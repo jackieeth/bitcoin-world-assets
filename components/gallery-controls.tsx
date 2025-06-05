@@ -21,8 +21,6 @@ interface GalleryControlsProps {
   onTraitChange: (trait: string) => void;
   sortBy: SortOption;
   onSortChange: (option: SortOption) => void;
-  gridConfig: GridConfig;
-  onGridConfigChange: (config: Partial<GridConfig>) => void;
 }
 
 export function GalleryControls({

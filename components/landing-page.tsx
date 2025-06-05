@@ -165,6 +165,8 @@ export function LandingPage({
                 traits.push("BlocksOfBitcoin");
               }
 
+              traits.push(`${blockNumber.toString().length}D`)
+
               // Only include uncommon sats
               SatBlocks.push({
                 blockNumber: blockNumber,
@@ -227,6 +229,7 @@ export function LandingPage({
                 if (blocksOfSats["blocksOf"].includes(Number(blockNumber))) {
                   traits.push("BlocksOfBitcoin");
                 }
+                traits.push(`${blockNumber.toString().length}D`)
                 SatBlocks.push({
                   blockNumber: blockNumber,
                   satStash: item.rareSatsUtxo.satRanges[0].parentFrom,
@@ -364,6 +367,7 @@ export function LandingPage({
           if (blocksOfSats["blocksOf"].includes(Number(blockNumber))) {
             traits.push("BlocksOfBitcoin");
           }
+          traits.push(`${blockNumber.toString().length}D`)
           SatBlocks.push({
             blockNumber: blockNumber,
             satStash: satStash[0],
