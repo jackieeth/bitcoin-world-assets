@@ -131,7 +131,7 @@ export default function BlockPage() {
     playerMesh.castShadow = true;
     playerMesh.position.set(
       Math.random() * 5 - 2.5,
-      2,
+      1.5,
       Math.random() * 5 - 2.5,
     );
     playerMesh.visible = false; // hide until entering the world
