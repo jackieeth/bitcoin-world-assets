@@ -418,9 +418,25 @@ export default function BlockPage() {
         (address: any) => address.purpose === "ordinals",
       );
       const ordAddress = ordinalsAddressItem?.address;
-      // console.log("ordAddress", ordAddress);
       const newName = ordAddress.slice(0, 4) + "..." + ordAddress.slice(-4);
-      setPlayerName(newName);
+      const resHolder = await fetch(
+        `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getbwauser?btcAddress=${ordAddress}&passcode=${process.env.NEXT_PUBLIC_QUARK20_API_GETHOLDER_KEY}`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+        },
+      ).then((d) => d.json());
+      if (resHolder["success"] && resHolder["blk"]){
+        if (resHolder["blk"] < 100000){
+          setPlayerName(`BLOCK ${resHolder["blk"]}`);
+        } else {
+          setPlayerName(newName);
+        }
+      } else {
+        setPlayerName(newName);
+      }
       setConnected(true);
     }
   };

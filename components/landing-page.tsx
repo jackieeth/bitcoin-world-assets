@@ -19,7 +19,7 @@ interface LandingPageProps {
 
 function shortenString(str: string): string {
   if (str.length <= 12) return str; // If the string is already short, return it as is
-  return `${str.slice(0, 6)}...${str.slice(-6)}`;
+  return `${str.slice(0, 4)}...${str.slice(-4)}`;
 }
 
 export function LandingPage({
@@ -47,7 +47,7 @@ export function LandingPage({
   const hasSearchedRef = useRef(false); // guard for initial paste handling
   const [justPasted, setJustPasted] = useState(false);
   const [latestHolders, setLatestHolders] = useState<
-    { address: string; satDataLength: number; lastUpdate: number }[]
+    { address: string; satDataLength: number; lastUpdate: number; blk: number }[]
   >([]);
   const [uncommonFloorPrice, setUncommonFloorPrice] = useState<number | null>(
     null,
@@ -591,15 +591,15 @@ export function LandingPage({
 
       {latestHolders.length > 0 ? (
         <div className="text-gray-300 mt-8">
-          - Latest BWA holders -<br />
+          - <b>Latest BWA holders</b> -<br />
           {latestHolders.map((holder, index) => (
-            <small key={`b-${index}`}>
+            <small key={`b-${index}`}>{holder.blk < 100000 ? <small>BLOCK {holder.blk}{` Holder: `}</small>:``} 
               <a href={`/address/${holder.address}`}>
-                {shortenString(holder.address)}
+                <b>{shortenString(holder.address)}</b>
               </a>
 
-              {`: `}
-              {holder.satDataLength}
+              {` `}
+              <b style={{"fontSize": "1.2em"}}>{holder.satDataLength}</b> 
               <br />
             </small>
           ))}
