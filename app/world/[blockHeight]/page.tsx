@@ -72,6 +72,14 @@ export default function BlockPage() {
 
   if (!blockHeight) return null;
 
+  const [xverseAvailable, setXverseAvailable] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.XverseProviders) {
+      setXverseAvailable(true);
+    }
+  }, []);
+
   // =============== THREE scene initialisation ================
   useEffect(() => {
     if (!canvasRef.current || !labelsRef.current) return;
@@ -86,7 +94,7 @@ export default function BlockPage() {
       0.1,
       1000,
     );
-    camera.position.set(0, 3, 6);
+    camera.position.set(0, 5, 10);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -99,15 +107,18 @@ export default function BlockPage() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     if (isMobile) {
-      // On mobile, disable zoom and enable pinch-to-pan
-      controls.enableZoom = false;
-      controls.enablePan = true;
-      controls.touches.ONE = THREE.TOUCH.ROTATE;
-      controls.touches.TWO = THREE.TOUCH.PAN;
+        // On mobile, disable zoom and enable two-finger tap panning
+        controls.enableZoom = false;
+        controls.enablePan = true;
+        controls.touches.ONE = THREE.TOUCH.ROTATE;
+        controls.touches.TWO = THREE.TOUCH.PAN;
     } else {
-      // On desktop, enable mouse wheel zoom and disable panning
-      controls.enableZoom = true;
-      controls.enablePan = false;
+        // On desktop, enable zoom and use right mouse button for panning only
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+        controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
+        controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
     }
     controls.minDistance = 2;
     controls.maxDistance = 15;
@@ -458,14 +469,13 @@ export default function BlockPage() {
           </a>
         )}
 
-        {/* Enter World */}
-        {!connected && (
-          <button
+        { xverseAvailable && !connected && (
+          <div><br/><button
             onClick={checkMember}
             className="mt-6 px-4 py-1.5 text-white text-xs rounded hover:bg-gray-500 border border-white transition-colors"
           >
             Enter Bitcoin World {blockHeight}
-          </button>
+          </button></div>
         )}
       </div>
     </main>
