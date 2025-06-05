@@ -193,6 +193,35 @@ export default function BlockPage() {
       });
     };
 
+    // ======= Collision helper =======
+    const checkCollision = (newPos: THREE.Vector3) => {
+      const player = playerMeshRef.current;
+      if (!player || !objectsRef.current) return false;
+
+      // Update the player's world matrix.
+      player.updateMatrixWorld(true);
+      // Create the player's current bounding box.
+      const playerBox = new THREE.Box3().setFromObject(player);
+      // Calculate the offset and translate the box.
+      const offset = newPos.clone().sub(player.position);
+      playerBox.translate(offset);
+
+      let collided = false;
+      // console.log("objectsRef.current:", objectsRef)
+      objectsRef.current.forEach((child) => {
+        // Skip the player and any direct children of the player.
+        if (child === player || child.parent === player) return;
+        if (child instanceof THREE.Mesh && child.geometry) {
+          child.updateMatrixWorld(true);
+          const childBox = new THREE.Box3().setFromObject(child);
+          if (playerBox.intersectsBox(childBox)) {
+            collided = true;
+          }
+        }
+      });
+      return collided;
+    };
+
     const updateLocal = (dt: number) => {
       const moveInput = new THREE.Vector3();
       if (keysPressedRef.current["KeyW"]) moveInput.z += 1;
@@ -223,7 +252,15 @@ export default function BlockPage() {
         worldMove.addScaledVector(right, moveInput.x);
         worldMove.addScaledVector(new THREE.Vector3(0, 1, 0), moveInput.y);
 
-        playerMesh.position.add(worldMove.multiplyScalar(dt * speed));
+        // Calculate the proposed new position
+        const dtSpeed = dt * speed;
+        const currentPos = playerMesh.position.clone();
+        const nextPos = currentPos.add(worldMove.clone().multiplyScalar(dtSpeed));
+
+        // Only update if no collision is detected
+        if (!checkCollision(nextPos)) {
+          playerMesh.position.copy(nextPos);
+        }
       }
 
       // broadcast position to server
@@ -380,15 +417,21 @@ export default function BlockPage() {
     (async () => {
       const apiKey = process.env.NEXT_PUBLIC_ORDISCAN_API_KEY;
       if (!apiKey) return;
-      const sat = await new Ordiscan(apiKey).sat.getInfo(
-        Block1stSat(Number(blockHeight)),
-      );
-      setSatInfo({
-        ...sat,
-        rarity: sat.satributes
-          .sort((a: string, b: string) => a.localeCompare(b))
-          .join(" "),
-      });
+      try {
+          const sat = await new Ordiscan(apiKey).sat.getInfo(
+          Block1stSat(Number(blockHeight)),
+        );
+        setSatInfo({
+          ...sat,
+          rarity: sat.satributes
+            .sort((a: string, b: string) => a.localeCompare(b))
+            .join(" "),
+        });
+      } catch (error) {
+        console.log(error, "ordiscan is down")
+
+      }
+      
     })();
   }, [blockHeight]);
 
@@ -468,7 +511,7 @@ export default function BlockPage() {
             </span>
           )}
           <br />
-          Mined: {satInfo.creation_date}
+          {satInfo && satInfo.creation_date && <span>Mined: {satInfo.creation_date}</span>}
         </span>
 
         {blockImageUrl && (
