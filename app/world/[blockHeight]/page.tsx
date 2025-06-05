@@ -86,10 +86,20 @@ export default function BlockPage() {
     canvasRef.current.appendChild(renderer.domElement);
 
     //------------------- orbit controls (3rd‑person camera)
+    const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.enablePan = false;
-    controls.enableZoom = false;
+    if (isMobile) {
+      // On mobile, disable zoom and enable pinch-to-pan
+      controls.enableZoom = false;
+      controls.enablePan = true;
+      controls.touches.ONE = THREE.TOUCH.ROTATE;
+      controls.touches.TWO = THREE.TOUCH.PAN;
+    } else {
+      // On desktop, enable mouse wheel zoom and disable panning
+      controls.enableZoom = true;
+      controls.enablePan = false;
+    }
     controls.minDistance = 2;
     controls.maxDistance = 15;
 
