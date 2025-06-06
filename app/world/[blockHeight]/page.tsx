@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { parseMML } from '../../../lib/mmlParser';
 
 // Extend the Window interface to include XverseProviders
 declare global {
@@ -15,10 +14,10 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useParams } from "next/navigation";
 
 import {
-  updateAnimations,
   getBlockImage,
   Block1stSat,
 } from "../../../lib/gen-bitfeed";
+import { parseMML, updateAnimations } from '../../../lib/mmlParser';
 import blocksOfSats from "../../../lib/uncommonBlocksOf.json";
 import uncommonSatribute from "../../../lib/uncommonSatributes.json";
 import {
@@ -314,7 +313,9 @@ export default function BlockPage() {
       requestAnimationFrame(animate);
       const dt = clock.getDelta();
 
-      updateAnimations(objectsRef.current, dt);
+      if (sceneRef.current) {
+        updateAnimations(sceneRef.current, dt);
+      }
       updateLocal(dt);
       smoothRemotes(dt);
 
