@@ -895,7 +895,7 @@ export const genBitFeedMml = async (
               5000 + Math.floor(deterministicRandom(`q${i}${minute}`) * 200)
             }" ping-pong="true" ping-pong-delay="2000"></m-attr-anim>`
           : ``
-      } ${slot.r === 5 && placeModel && modelWillAppear ? `<m-model src="https://quark20a.s3.us-west-1.amazonaws.com/q/1377952728323592342_1748599938.glb" x="0" y=".5" z="0" sx=".5" sy=".5" sz=".5"> </m-model>
+      } ${slot.r === 5 && placeModel && modelWillAppear ? `<m-model src="https://quark20a.s3.us-west-1.amazonaws.com/q/1377952728323592342_1748599938.glb" x="0" y=".65" z="0" sx=".5" sy=".5" sz=".5"> </m-model>
 `: ``}</m-cube>`;
       if (slot.r === 5) {
         placeModel = false; // Only place one puppet
