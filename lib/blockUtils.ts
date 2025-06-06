@@ -70,8 +70,14 @@ export function setupLights(scene: THREE.Scene) {
   const mainLight = new THREE.DirectionalLight(0xffffff, 4.2);
   mainLight.position.set(50, 50, 25);
   mainLight.castShadow = true;
-  mainLight.shadow.mapSize.width = 2048;
-  mainLight.shadow.mapSize.height = 2048;
+  mainLight.shadow.camera.left = -50;
+  mainLight.shadow.camera.right = 50;
+  mainLight.shadow.camera.top = 50;
+  mainLight.shadow.camera.bottom = -50;
+  mainLight.shadow.camera.near = 0.1;
+  mainLight.shadow.camera.far = 100;
+  mainLight.shadow.mapSize.width = 4096;
+  mainLight.shadow.mapSize.height = 4096;
   scene.add(mainLight);
 
   const backLight = new THREE.DirectionalLight(0xffffff, 0.4);

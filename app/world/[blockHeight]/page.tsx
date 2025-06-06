@@ -58,7 +58,7 @@ export default function BlockPage() {
   const [blockImageUrl, setBlockImageUrl] = useState<string>("");
   const [satInfo, setSatInfo] = useState<any>({});
   const [imgLoaded, setImgLoaded] = useState(false);
-   const [Entering, setIsEntering] = useState(false);
+  const [Entering, setIsEntering] = useState(false);
   const [xmlContent, setXmlDoc] = useState<string>("");
   const [traitLine, setTraitLine] = useState<string>("");
 
@@ -155,7 +155,7 @@ export default function BlockPage() {
     setupLights(scene);
     createMMLStructure(
       Number(blockHeight),
-      0.5,
+      1,
       "#ccc",
       `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/gettxdata` || "",
       process.env.NEXT_PUBLIC_QUARK20_API_KEY || "",
