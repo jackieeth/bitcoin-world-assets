@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { parseMML } from '../../../lib/mmlParser';
 
 // Extend the Window interface to include XverseProviders
 declare global {
@@ -60,6 +61,7 @@ export default function BlockPage() {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [Entering, setIsEntering] = useState(false);
   const [xmlContent, setXmlDoc] = useState<string>("");
+  const [mmlContent, setMmlDoc] = useState<string>("");
   const [traitLine, setTraitLine] = useState<string>("");
 
   const [parcelStats, setParcelStats] = useState<{
@@ -155,7 +157,7 @@ export default function BlockPage() {
     setupLights(scene);
     createMMLStructure(
       Number(blockHeight),
-      1,
+      2,
       "#ccc",
       `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/gettxdata` || "",
       process.env.NEXT_PUBLIC_QUARK20_API_KEY || "",
@@ -475,7 +477,8 @@ export default function BlockPage() {
   }, [blockHeight]);
 
   const checkMember = async () => {
-    setIsEntering(true);
+  setIsEntering(true);
+  try {
     const res = await window.XverseProviders.BitcoinProvider.request(
       "getAccounts",
       {
@@ -484,23 +487,39 @@ export default function BlockPage() {
       },
       window.XverseProviders.BitcoinProvider,
     );
+    
     if (res.result) {
       const ordinalsAddressItem = res.result.find(
         (address: any) => address.purpose === "ordinals",
       );
       const ordAddress = ordinalsAddressItem?.address;
       const newName = ordAddress.slice(0, 4) + "..." + ordAddress.slice(-4);
+      
       const resHolder = await fetch(
         `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getbwauser?btcAddress=${ordAddress}&passcode=${process.env.NEXT_PUBLIC_QUARK20_API_GETHOLDER_KEY}`,
-        {
-          method: "GET",
-          headers: {
-            accept: "application/json",
-          },
-        },
       ).then((d) => d.json());
-      if (resHolder["success"] && resHolder["blk"]){
-        if (resHolder["blk"] < 100000){
+
+      if (resHolder["success"] && resHolder["blk"]) {
+        // Load and parse MML
+        const mmlUrl = "https://quark20a.s3.us-west-1.amazonaws.com/q/bc1pdrr0vwh2x63u2vmxmcwn8v8l57d6dzrh7hzlhggg48vkjrfa2cvquqlesy.xml";
+        const mmlContent = await fetch(mmlUrl).then((d) => d.text());
+        setMmlDoc(mmlContent);
+
+        // Parse MML and add to scene
+        if (sceneRef.current) {
+          try {
+            const mmlObject = parseMML(mmlContent);
+            sceneRef.current.add(mmlObject);
+            // Add to objects ref for collision detection
+            if (Array.isArray(objectsRef.current)) {
+              objectsRef.current.push(...mmlObject.children);
+            }
+          } catch (error) {
+            console.error("Error parsing MML:", error);
+          }
+        }
+
+        if (resHolder["blk"] < 100000) {
           setPlayerName(`BLOCK ${resHolder["blk"]}`);
         } else {
           setPlayerName(newName);
@@ -510,8 +529,12 @@ export default function BlockPage() {
       }
       setConnected(true);
     }
+  } catch (error) {
+    console.error("Error during member check:", error);
+  } finally {
     setIsEntering(false);
-  };
+  }
+};
 
   // =============== JSX layout ================
   return (
@@ -556,7 +579,20 @@ export default function BlockPage() {
             />
           </a>
         )}
-
+        {parcelStats && (
+          <div className="text-xs mt-2">
+            <strong>Parcel info:</strong>
+            <br />
+            {Object.entries(parcelStats.counts).map(([size, count]) => (
+              <div key={size}>
+                size {size}: {count}
+              </div>
+            ))}
+            <div>
+              Total: <b>{parcelStats.total}</b>
+            </div>
+          </div>
+        )}
         { xverseAvailable && !connected && (
           <div><br/><button
             onClick={checkMember}

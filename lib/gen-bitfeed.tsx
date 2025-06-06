@@ -885,7 +885,7 @@ export const genBitFeedMml = async (
         slot.r * size * 0.9
       }" height="${platform_thickness * slot.r}" depth="${
         slot.r * size * 0.9
-      }" x="${(slot.position.x + slot.r - blockWidth / 2) * size - margin * slot.r}" y="${(0.1 * slot.r) / 2}" z="${
+      }" x="${(slot.position.x + slot.r - blockWidth / 2) * size - margin * slot.r}" y="${(0.1 * slot.r) / 2 - platform_thickness * slot.r/2}" z="${
         (slot.position.y + slot.r - blockWidth / 2) * size - margin * slot.r
       }" color="${parcelColor}">${
         deterministicRandom(`b${i}${minute}`) > 0.995
