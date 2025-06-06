@@ -123,7 +123,7 @@ export default function BlockPage() {
         controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
     }
     controls.minDistance = 2;
-    controls.maxDistance = 15;
+    controls.maxDistance = 30;
 
     //------------------- local cube (player)
     const playerMesh = new THREE.Mesh(
@@ -545,7 +545,7 @@ export default function BlockPage() {
 
       {/* info panel */}
       <div className="absolute top-4 left-4 text-xl">
-        <a href="/" className="text-slate-400 text-xs underline">
+        <a href="/" className="text-slate-400 text-xs">
           Bitcoin World Asset
         </a>
         <br />
@@ -597,9 +597,9 @@ export default function BlockPage() {
         { xverseAvailable && !connected && (
           <div><br/><button
             onClick={checkMember}
-            className="mt-6 w-60 px-4 py-1.5 text-white text-xs rounded hover:bg-gray-500 border border-white transition-colors"
+            className="mt-6 w-60 px-4 py-1.5 text-white text-xs rounded hover:bg-orange-400 border border-white transition-colors"
           >
-            {Entering ? "Entering...":<span>Enter Bitcoin World {blockHeight}</span>}
+            {Entering ? "Entering...":<span>Enter Bitcoin World #{blockHeight}</span>}
           </button></div>
         )}
       </div>

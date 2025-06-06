@@ -64,10 +64,10 @@ export function downloadFile(filename: string, content: string) {
 
 // Setup lights utility
 export function setupLights(scene: THREE.Scene) {
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
   scene.add(ambientLight);
 
-  const mainLight = new THREE.DirectionalLight(0xffffff, 4.2);
+  const mainLight = new THREE.DirectionalLight(0xffffff, 4.5);
   mainLight.position.set(50, 50, 25);
   mainLight.castShadow = true;
   mainLight.shadow.camera.left = -50;
