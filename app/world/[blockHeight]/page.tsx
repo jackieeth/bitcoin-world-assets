@@ -23,6 +23,7 @@ import {
   generateId,
   makeLabel,
   updateLabel,
+  enableShadows,
 } from "../../../lib/blockUtils";
 
 interface RemotePlayer {
@@ -114,6 +115,7 @@ export default function BlockPage() {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.shadowMap.enabled = true;
     canvasRef.current.appendChild(renderer.domElement);
 
@@ -577,6 +579,7 @@ export default function BlockPage() {
             try {
               const mmlObject = parseMML(mmlContent);
               sceneRef.current!.add(mmlObject);
+              enableShadows(mmlObject); 
               registerMeshes(mmlObject);
               if (Array.isArray(objectsRef.current)) {
                 objectsRef.current.push(...mmlObject.children);

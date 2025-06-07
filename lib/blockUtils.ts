@@ -1,6 +1,24 @@
 import * as THREE from "three";
 import { genBitFeedMml, processXMLNode } from "./gen-bitfeed";
 
+/** Make every mesh in a subtree cast & receive shadows */
+export function enableShadows(root: THREE.Object3D) {
+  root.traverse((child) => {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      // (optional) make sure single-sided materials still catch light
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach((m) => (m.side = THREE.DoubleSide));
+      } else {
+        (mesh.material as THREE.Material).side = THREE.DoubleSide;
+      }
+    }
+  });
+}
+
 export function deterministicRandom(seed: string): number {
     // Compute a simple hash from the seed string.
     let hash = 0;
@@ -78,6 +96,7 @@ export function setupLights(scene: THREE.Scene) {
   mainLight.shadow.camera.far = 100;
   mainLight.shadow.mapSize.width = 4096;
   mainLight.shadow.mapSize.height = 4096;
+  mainLight.shadow.bias = -0.001; 
   scene.add(mainLight);
 
   const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
