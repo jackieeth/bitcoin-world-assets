@@ -40,7 +40,9 @@ export default function BlockPage() {
   const JUMP_MIN    = 5;               // lowest jump velocity (tap)
   const JUMP_MAX    = 10;              // highest jump velocity (full hold)
   const JUMP_HOLD_MS = 250;            // how long it takes to reach full jump
-
+  const halfHeight = 0.6;            // half of player box height
+  const MAX_JUMPS       = 2;                 // ground jump + 1 extra
+const jumpsLeftRef    = useRef<number>(MAX_JUMPS);
   const velocityRef   = useRef(new THREE.Vector3()); // per-frame velocity
   const onGroundRef   = useRef(true);                // is avatar touching ground?
 
@@ -196,11 +198,16 @@ camera.position.set(0, 2, 4);
     window.addEventListener("resize", onResize);
     const onKeyDown = (e: KeyboardEvent) =>
       {
+        if (e.code === 'Space') {
+    const alreadyHeld = keysPressedRef.current['Space'];   // state *before* we flag it
+    if (!alreadyHeld && jumpsLeftRef.current > 0) {
+      velocityRef.current.y = JUMP_VEL;    // upward impulse
+      onGroundRef.current   = false;
+      jumpsLeftRef.current--;              // consume a charge
+    }
+  }
         (keysPressedRef.current[e.code] = true);
-if (e.code === 'Space' && onGroundRef.current) {
-  velocityRef.current.y = JUMP_VEL;   // instant upward impulse
-  onGroundRef.current   = false;      // we’re airborne now
-}
+
       }
     const onKeyUp = (e: KeyboardEvent) =>{
       (keysPressedRef.current[e.code] = false);
@@ -282,7 +289,7 @@ const updateLocal = (dt: number) => {
   const nextPos = playerMesh.position.clone().addScaledVector(vel, dt);
 
   /* ----------- ground / mesh collision & landing -------- */
-  const halfHeight = 0.6;            // half of player box height
+  
   let landed = false;
 
   // 1) ground plane at y=0
@@ -307,7 +314,7 @@ const updateLocal = (dt: number) => {
   }
 
   onGroundRef.current = landed;
-
+  if (landed) jumpsLeftRef.current = MAX_JUMPS;
   /* ---------------- apply position --------------------- */
   playerMesh.position.copy(nextPos);
 
