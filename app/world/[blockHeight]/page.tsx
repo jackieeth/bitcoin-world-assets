@@ -121,6 +121,9 @@ export default function BlockPage() {
         controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
         controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
         controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+        // 🔒 VERTICAL CLAMP
+        controls.minPolarAngle = 0;                      // never look *above* the avatar (optional)
+        controls.maxPolarAngle = Math.PI / 2 - 0.02;     // ~88° – keeps camera above the floor
     }
     controls.minDistance = 2;
     controls.maxDistance = 30;
