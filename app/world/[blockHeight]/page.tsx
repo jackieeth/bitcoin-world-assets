@@ -35,6 +35,15 @@ interface RemotePlayer {
 }
 
 export default function BlockPage() {
+  const GRAVITY     = -20;             // m/s²  (tweak to taste)
+  const JUMP_VEL  = 8; 
+  const JUMP_MIN    = 5;               // lowest jump velocity (tap)
+  const JUMP_MAX    = 10;              // highest jump velocity (full hold)
+  const JUMP_HOLD_MS = 250;            // how long it takes to reach full jump
+
+  const velocityRef   = useRef(new THREE.Vector3()); // per-frame velocity
+  const onGroundRef   = useRef(true);                // is avatar touching ground?
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const labelsRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene>(null);
@@ -96,7 +105,7 @@ export default function BlockPage() {
       0.1,
       1000,
     );
-    camera.position.set(0, 5, 10);
+    // camera.position.set(0, 5, 10);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -107,6 +116,11 @@ export default function BlockPage() {
     //------------------- orbit controls (3rd‑person camera)
     const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableZoom   = true;
+controls.zoomSpeed    = 0.8;   // smoother scroll
+controls.minDistance  = 1.5;   // feel free to tweak
+controls.maxDistance  = 12;
+
     controls.enableDamping = true;
     if (isMobile) {
         controls.enableZoom = false;
@@ -151,6 +165,11 @@ export default function BlockPage() {
     smallCube.castShadow = true;
     playerMesh.add(smallCube);
 
+    controls.target.copy(playerMesh.position);  // keep focus
+
+// bring the camera a bit closer initially
+camera.position.set(0, 2, 4);
+
     //------------------- world + lights
     setupLights(scene);
     createMMLStructure(
@@ -176,9 +195,18 @@ export default function BlockPage() {
     };
     window.addEventListener("resize", onResize);
     const onKeyDown = (e: KeyboardEvent) =>
-      (keysPressedRef.current[e.code] = true);
-    const onKeyUp = (e: KeyboardEvent) =>
+      {
+        (keysPressedRef.current[e.code] = true);
+if (e.code === 'Space' && onGroundRef.current) {
+  velocityRef.current.y = JUMP_VEL;   // instant upward impulse
+  onGroundRef.current   = false;      // we’re airborne now
+}
+      }
+    const onKeyUp = (e: KeyboardEvent) =>{
       (keysPressedRef.current[e.code] = false);
+
+    }
+      
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
@@ -217,91 +245,84 @@ export default function BlockPage() {
       return collided;
     };
 
-    const updateLocal = (dt: number) => {
-      const moveInput = new THREE.Vector3();
-      if (keysPressedRef.current["KeyW"]) moveInput.z += 1;
-      if (keysPressedRef.current["KeyS"]) moveInput.z -= 1;
-      if (keysPressedRef.current["KeyA"]) moveInput.x -= 1;
-      if (keysPressedRef.current["KeyD"]) moveInput.x += 1;
-      if (keysPressedRef.current["Space"]) moveInput.y += 1;
-      if (
-        !keysPressedRef.current["Space"] 
-        // &&
-        // !keysPressedRef.current["ShiftLeft"] &&
-        // !keysPressedRef.current["ShiftRight"]
-      ) {
-        moveInput.y -= 1; // Simulate gravity
-      }
+const updateLocal = (dt: number) => {
+  if (!playerMesh) return;
 
-      if (moveInput.lengthSq() > 0) {
-        moveInput.normalize();
+  /* ----------------------- INPUT ----------------------- */
+  const dir = new THREE.Vector3(
+    (keysPressedRef.current['KeyD'] ? 1 : 0) - (keysPressedRef.current['KeyA'] ? 1 : 0),
+    0,
+    (keysPressedRef.current['KeyW'] ? 1 : 0) - (keysPressedRef.current['KeyS'] ? 1 : 0),
+  );
 
-        const forward = new THREE.Vector3();
-        camera.getWorldDirection(forward);
-        forward.y = 0;
-        forward.normalize();
+  // normalise only horizontal part
+  if (dir.lengthSq() > 0) dir.normalize();
 
-        const right = new THREE.Vector3();
-        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+  /* ------------------ frame-dependent speed ------------ */
+  let currentSpeed = speed * (keysPressedRef.current['ShiftLeft'] || keysPressedRef.current['ShiftRight'] ? 1.5 : 1);
+  if (!onGroundRef.current) currentSpeed *= 0.4;              // ↓ air control
 
-        const worldMove = new THREE.Vector3();
-        worldMove.addScaledVector(forward, moveInput.z);
-        worldMove.addScaledVector(right, moveInput.x);
-        worldMove.addScaledVector(new THREE.Vector3(0, 1, 0), moveInput.y);
+  /* --------------- convert input to world space -------- */
+  const forward = new THREE.Vector3();
+  camera.getWorldDirection(forward); forward.y = 0; forward.normalize();
+  const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-        const dtSpeed = dt * speed;
-        const currentPos = playerMesh.position.clone();
-        const nextPos = currentPos.add(worldMove.clone().multiplyScalar(dtSpeed));
-        nextPos.y = Math.max(0, nextPos.y); // Clamp y to prevent going below 0
+  const move = new THREE.Vector3()
+    .addScaledVector(forward, dir.z)
+    .addScaledVector(right, dir.x)
+    .multiplyScalar(currentSpeed);
 
-        if (!checkCollision(nextPos)) {
-          playerMesh.position.copy(nextPos);
-        } else {
-          let pushDir = new THREE.Vector3();
-          const playerBox = new THREE.Box3().setFromObject(playerMesh);
-          objectsRef.current.forEach((child) => {
-            if (child === playerMesh || child.parent === playerMesh) return;
-            if (child instanceof THREE.Mesh && child.geometry) {
-              child.updateMatrixWorld(true);
-              const childBox = new THREE.Box3().setFromObject(child);
-              if (playerBox.intersectsBox(childBox)) {
-                const childCenter = new THREE.Vector3();
-                childBox.getCenter(childCenter);
-                const dir = playerMesh.position.clone().sub(childCenter);
-                if (dir.lengthSq() > 0) {
-                  pushDir.add(dir.normalize());
-                }
-              }
-            }
-          });
-          if (pushDir.lengthSq() > 0) {
-            const pushStrength = .1;
-            pushDir.normalize();
-            const pushVector = pushDir.multiplyScalar(pushStrength);
-            // Ensure push doesn't move player below y=0
-            pushVector.y = Math.max(0, pushVector.y);
-            playerMesh.position.add(pushVector);
-            // Clamp position after push
-            playerMesh.position.y = Math.max(0, playerMesh.position.y);
-          }
-        }
-      }
+  /* ------------------- apply physics ------------------- */
+  const vel = velocityRef.current;
 
-      if (socketRef.current?.readyState === WebSocket.OPEN) {
-        socketRef.current.send(
-          JSON.stringify({
-            type: "update",
-            id: playerId,
-            pos: playerMesh.position,
-          }),
-        );
-      }
+  vel.x = move.x;                     // direct-drive horizontal velocity
+  vel.z = move.z;
+  vel.y += GRAVITY * dt;              // gravity integration
 
-      if (playerLabelRef.current && connectedRef.current) {
-        updateLabel(playerMesh, playerLabelRef.current, camera);
-        playerLabelRef.current.style.display = "block";
-      }
-    };
+  const nextPos = playerMesh.position.clone().addScaledVector(vel, dt);
+
+  /* ----------- ground / mesh collision & landing -------- */
+  const halfHeight = 0.6;            // half of player box height
+  let landed = false;
+
+  // 1) ground plane at y=0
+  if (nextPos.y - halfHeight < 0) {
+    nextPos.y = halfHeight;
+    vel.y = 0;
+    landed = true;
+  }
+
+  // 2) meshes: simple “down” ray hit-test
+  const downRay = new THREE.Raycaster(
+    new THREE.Vector3(nextPos.x, nextPos.y, nextPos.z),
+    new THREE.Vector3(0, -1, 0),
+    0,
+    halfHeight + 0.05,                // small epsilon
+  );
+  const hits = downRay.intersectObjects(objectsRef.current, true);
+  if (hits.length > 0) {
+    nextPos.y = hits[0].point.y + halfHeight;
+    vel.y = 0;
+    landed = true;
+  }
+
+  onGroundRef.current = landed;
+
+  /* ---------------- apply position --------------------- */
+  playerMesh.position.copy(nextPos);
+
+  /* --------------- send network update ---------------- */
+  if (socketRef.current?.readyState === WebSocket.OPEN) {
+    socketRef.current.send(JSON.stringify({ type: 'update', id: playerId, pos: playerMesh.position }));
+  }
+
+  /* ----------------- update label --------------------- */
+  if (playerLabelRef.current && connectedRef.current) {
+    updateLabel(playerMesh, playerLabelRef.current, camera);
+    playerLabelRef.current.style.display = 'block';
+  }
+};
+
 
     const animate = () => {
       requestAnimationFrame(animate);
