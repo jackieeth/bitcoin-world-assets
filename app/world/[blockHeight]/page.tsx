@@ -109,21 +109,18 @@ export default function BlockPage() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     if (isMobile) {
-        // On mobile, disable zoom and enable two-finger tap panning
         controls.enableZoom = false;
         controls.enablePan = true;
         controls.touches.ONE = THREE.TOUCH.ROTATE;
         controls.touches.TWO = THREE.TOUCH.PAN;
     } else {
-        // On desktop, enable zoom and use right mouse button for panning only
         controls.enableZoom = true;
         controls.enablePan = true;
         controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
         controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
         controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
-        // 🔒 VERTICAL CLAMP
-        controls.minPolarAngle = 0;                      // never look *above* the avatar (optional)
-        controls.maxPolarAngle = Math.PI / 2 - 0.02;     // ~88° – keeps camera above the floor
+        controls.minPolarAngle = 0;
+        controls.maxPolarAngle = Math.PI / 2 - 0.02;
     }
     controls.minDistance = 2;
     controls.maxDistance = 30;
@@ -139,14 +136,13 @@ export default function BlockPage() {
       1.5,
       Math.random() * 5 - 2.5,
     );
-    playerMesh.visible = false; // hide until entering the world
+    playerMesh.visible = false;
     scene.add(playerMesh);
     playerMeshRef.current = playerMesh;
 
     playerLabelRef.current = makeLabel(playerName, labelsRef.current);
     playerLabelRef.current.style.display = "none";
 
-    // decorative small cube under main cube
     const smallCube = new THREE.Mesh(
       new THREE.BoxGeometry(0.3, 0.3, 0.3),
       new THREE.MeshStandardMaterial({ color: 0xffa200 }),
@@ -188,7 +184,7 @@ export default function BlockPage() {
 
     //------------------- movement helpers (3rd‑person flying)
     const clock = new THREE.Clock();
-    const speed = 6; // units per second
+    const speed = 6;
 
     const smoothRemotes = (dt: number) => {
       const alpha = 1 - Math.exp(-dt * 10);
@@ -198,23 +194,17 @@ export default function BlockPage() {
       });
     };
 
-    // ======= Collision helper =======
     const checkCollision = (newPos: THREE.Vector3) => {
       const player = playerMeshRef.current;
       if (!player || !objectsRef.current) return false;
 
-      // Update the player's world matrix.
       player.updateMatrixWorld(true);
-      // Create the player's current bounding box.
       const playerBox = new THREE.Box3().setFromObject(player);
-      // Calculate the offset and translate the box.
       const offset = newPos.clone().sub(player.position);
       playerBox.translate(offset);
 
       let collided = false;
-      // console.log("objectsRef.current:", objectsRef)
       objectsRef.current.forEach((child) => {
-        // Skip the player and any direct children of the player.
         if (child === player || child.parent === player) return;
         if (child instanceof THREE.Mesh && child.geometry) {
           child.updateMatrixWorld(true);
@@ -228,89 +218,90 @@ export default function BlockPage() {
     };
 
     const updateLocal = (dt: number) => {
-    const moveInput = new THREE.Vector3();
-    if (keysPressedRef.current["KeyW"]) moveInput.z += 1;
-    if (keysPressedRef.current["KeyS"]) moveInput.z -= 1;
-    if (keysPressedRef.current["KeyA"]) moveInput.x -= 1;
-    if (keysPressedRef.current["KeyD"]) moveInput.x += 1;
-    if (keysPressedRef.current["Space"]) moveInput.y += 1;
-    if (
-      keysPressedRef.current["ShiftLeft"] ||
-      keysPressedRef.current["ShiftRight"]
-    )
-      moveInput.y -= 1;
+      const moveInput = new THREE.Vector3();
+      if (keysPressedRef.current["KeyW"]) moveInput.z += 1;
+      if (keysPressedRef.current["KeyS"]) moveInput.z -= 1;
+      if (keysPressedRef.current["KeyA"]) moveInput.x -= 1;
+      if (keysPressedRef.current["KeyD"]) moveInput.x += 1;
+      if (keysPressedRef.current["Space"]) moveInput.y += 1;
+      if (
+        !keysPressedRef.current["Space"] 
+        // &&
+        // !keysPressedRef.current["ShiftLeft"] &&
+        // !keysPressedRef.current["ShiftRight"]
+      ) {
+        moveInput.y -= 1; // Simulate gravity
+      }
 
-    if (moveInput.lengthSq() > 0) {
-      moveInput.normalize();
+      if (moveInput.lengthSq() > 0) {
+        moveInput.normalize();
 
-      // camera‑relative directions
-      const forward = new THREE.Vector3();
-      camera.getWorldDirection(forward);
-      forward.y = 0;
-      forward.normalize();
+        const forward = new THREE.Vector3();
+        camera.getWorldDirection(forward);
+        forward.y = 0;
+        forward.normalize();
 
-      const right = new THREE.Vector3();
-      right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+        const right = new THREE.Vector3();
+        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-      const worldMove = new THREE.Vector3();
-      worldMove.addScaledVector(forward, moveInput.z);
-      worldMove.addScaledVector(right, moveInput.x);
-      worldMove.addScaledVector(new THREE.Vector3(0, 1, 0), moveInput.y);
+        const worldMove = new THREE.Vector3();
+        worldMove.addScaledVector(forward, moveInput.z);
+        worldMove.addScaledVector(right, moveInput.x);
+        worldMove.addScaledVector(new THREE.Vector3(0, 1, 0), moveInput.y);
 
-      const dtSpeed = dt * speed;
-      const currentPos = playerMesh.position.clone();
-      const nextPos = currentPos.add(worldMove.clone().multiplyScalar(dtSpeed));
+        const dtSpeed = dt * speed;
+        const currentPos = playerMesh.position.clone();
+        const nextPos = currentPos.add(worldMove.clone().multiplyScalar(dtSpeed));
+        nextPos.y = Math.max(0, nextPos.y); // Clamp y to prevent going below 0
 
-      if (!checkCollision(nextPos)) {
-        // No collision: update normally.
-        playerMesh.position.copy(nextPos);
-      } else {
-        // Collision detected: push avatar out.
-        let pushDir = new THREE.Vector3();
-        const playerBox = new THREE.Box3().setFromObject(playerMesh);
-        objectsRef.current.forEach((child) => {
-          // Skip the player and its direct children.
-          if (child === playerMesh || child.parent === playerMesh) return;
-          if (child instanceof THREE.Mesh && child.geometry) {
-            child.updateMatrixWorld(true);
-            const childBox = new THREE.Box3().setFromObject(child);
-            if (playerBox.intersectsBox(childBox)) {
-              // Compute the center of the colliding object.
-              const childCenter = new THREE.Vector3();
-              childBox.getCenter(childCenter);
-              const dir = playerMesh.position.clone().sub(childCenter);
-              if (dir.lengthSq() > 0) {
-                pushDir.add(dir.normalize());
+        if (!checkCollision(nextPos)) {
+          playerMesh.position.copy(nextPos);
+        } else {
+          let pushDir = new THREE.Vector3();
+          const playerBox = new THREE.Box3().setFromObject(playerMesh);
+          objectsRef.current.forEach((child) => {
+            if (child === playerMesh || child.parent === playerMesh) return;
+            if (child instanceof THREE.Mesh && child.geometry) {
+              child.updateMatrixWorld(true);
+              const childBox = new THREE.Box3().setFromObject(child);
+              if (playerBox.intersectsBox(childBox)) {
+                const childCenter = new THREE.Vector3();
+                childBox.getCenter(childCenter);
+                const dir = playerMesh.position.clone().sub(childCenter);
+                if (dir.lengthSq() > 0) {
+                  pushDir.add(dir.normalize());
+                }
               }
             }
+          });
+          if (pushDir.lengthSq() > 0) {
+            const pushStrength = .1;
+            pushDir.normalize();
+            const pushVector = pushDir.multiplyScalar(pushStrength);
+            // Ensure push doesn't move player below y=0
+            pushVector.y = Math.max(0, pushVector.y);
+            playerMesh.position.add(pushVector);
+            // Clamp position after push
+            playerMesh.position.y = Math.max(0, playerMesh.position.y);
           }
-        });
-        if (pushDir.lengthSq() > 0) {
-          // Adjust pushStrength as needed.
-          const pushStrength = .1;
-          pushDir.normalize();
-          playerMesh.position.add(pushDir.multiplyScalar(pushStrength));
         }
       }
-    }
 
-    // broadcast position to server
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(
-        JSON.stringify({
-          type: "update",
-          id: playerId,
-          pos: playerMesh.position,
-        }),
-      );
-    }
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        socketRef.current.send(
+          JSON.stringify({
+            type: "update",
+            id: playerId,
+            pos: playerMesh.position,
+          }),
+        );
+      }
 
-    // label follow
-    if (playerLabelRef.current && connectedRef.current) {
-      updateLabel(playerMesh, playerLabelRef.current, camera);
-      playerLabelRef.current.style.display = "block";
-    }
-};
+      if (playerLabelRef.current && connectedRef.current) {
+        updateLabel(playerMesh, playerLabelRef.current, camera);
+        playerLabelRef.current.style.display = "block";
+      }
+    };
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -322,15 +313,15 @@ export default function BlockPage() {
       updateLocal(dt);
       smoothRemotes(dt);
 
-      // keep camera orbiting the player
+      // Ensure controls target stays above y=0
       controls.target.copy(playerMesh.position);
+      controls.target.y = Math.max(0, controls.target.y);
       controls.update();
 
       renderer.render(scene, camera);
     };
     animate();
 
-    //------------------- cleanup
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("keydown", onKeyDown);
@@ -412,7 +403,6 @@ export default function BlockPage() {
           remote.mesh.position.copy(remote.targetPos);
       });
 
-      // remove stale players
       remotePlayersRef.current.forEach((remote, id) => {
         if (!playersState[id]) {
           sceneRef.current?.remove(remote.mesh);
@@ -462,9 +452,7 @@ export default function BlockPage() {
         });
       } catch (error) {
         console.log(error, "ordiscan is down")
-
       }
-      
     })();
   }, [blockHeight]);
 
@@ -481,64 +469,61 @@ export default function BlockPage() {
   }, [blockHeight]);
 
   const checkMember = async () => {
-  setIsEntering(true);
-  try {
-    const res = await window.XverseProviders.BitcoinProvider.request(
-      "getAccounts",
-      {
-        purposes: ["ordinals"],
-        message: "Bitcoin World Asset",
-      },
-      window.XverseProviders.BitcoinProvider,
-    );
-    
-    if (res.result) {
-      const ordinalsAddressItem = res.result.find(
-        (address: any) => address.purpose === "ordinals",
+    setIsEntering(true);
+    try {
+      const res = await window.XverseProviders.BitcoinProvider.request(
+        "getAccounts",
+        {
+          purposes: ["ordinals"],
+          message: "Bitcoin World Asset",
+        },
+        window.XverseProviders.BitcoinProvider,
       );
-      const ordAddress = ordinalsAddressItem?.address;
-      const newName = ordAddress.slice(0, 4) + "..." + ordAddress.slice(-4);
-      
-      const resHolder = await fetch(
-        `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getbwauser?btcAddress=${ordAddress}&passcode=${process.env.NEXT_PUBLIC_QUARK20_API_GETHOLDER_KEY}`,
-      ).then((d) => d.json());
 
-      if (resHolder["success"] && resHolder["blk"]) {
-        // Load and parse MML
-        const mmlUrl = "https://quark20a.s3.us-west-1.amazonaws.com/q/bc1pdrr0vwh2x63u2vmxmcwn8v8l57d6dzrh7hzlhggg48vkjrfa2cvquqlesy.xml";
-        const mmlContent = await fetch(mmlUrl).then((d) => d.text());
-        setMmlDoc(mmlContent);
+      if (res.result) {
+        const ordinalsAddressItem = res.result.find(
+          (address: any) => address.purpose === "ordinals",
+        );
+        const ordAddress = ordinalsAddressItem?.address;
+        const newName = ordAddress.slice(0, 4) + "..." + ordAddress.slice(-4);
 
-        // Parse MML and add to scene
-        if (sceneRef.current) {
-          try {
-            const mmlObject = parseMML(mmlContent);
-            sceneRef.current.add(mmlObject);
-            // Add to objects ref for collision detection
-            if (Array.isArray(objectsRef.current)) {
-              objectsRef.current.push(...mmlObject.children);
+        const resHolder = await fetch(
+          `${process.env.NEXT_PUBLIC_QUARK20_API_URL}/getbwauser?btcAddress=${ordAddress}&passcode=${process.env.NEXT_PUBLIC_QUARK20_API_GETHOLDER_KEY}`,
+        ).then((d) => d.json());
+
+        if (resHolder["success"] && resHolder["blk"]) {
+          const mmlUrl = "https://quark20a.s3.us-west-1.amazonaws.com/q/bc1pdrr0vwh2x63u2vmxmcwn8v8l57d6dzrh7hzlhggg48vkjrfa2cvquqlesy.xml";
+          const mmlContent = await fetch(mmlUrl).then((d) => d.text());
+          setMmlDoc(mmlContent);
+
+          if (sceneRef.current) {
+            try {
+              const mmlObject = parseMML(mmlContent);
+              sceneRef.current.add(mmlObject);
+              if (Array.isArray(objectsRef.current)) {
+                objectsRef.current.push(...mmlObject.children);
+              }
+            } catch (error) {
+              console.error("Error parsing MML:", error);
             }
-          } catch (error) {
-            console.error("Error parsing MML:", error);
           }
-        }
 
-        if (resHolder["blk"] < 100000) {
-          setPlayerName(`BLOCK ${resHolder["blk"]}`);
+          if (resHolder["blk"] < 100000) {
+            setPlayerName(`BLOCK ${resHolder["blk"]}`);
+          } else {
+            setPlayerName(newName);
+          }
         } else {
           setPlayerName(newName);
         }
-      } else {
-        setPlayerName(newName);
+        setConnected(true);
       }
-      setConnected(true);
+    } catch (error) {
+      console.error("Error during member check:", error);
+    } finally {
+      setIsEntering(false);
     }
-  } catch (error) {
-    console.error("Error during member check:", error);
-  } finally {
-    setIsEntering(false);
-  }
-};
+  };
 
   // =============== JSX layout ================
   return (
@@ -597,13 +582,16 @@ export default function BlockPage() {
             </div>
           </div>
         )}
-        { xverseAvailable && !connected && (
-          <div><br/><button
-            onClick={checkMember}
-            className="mt-6 w-60 px-4 py-1.5 text-white text-xs rounded hover:bg-orange-400 border border-white transition-colors"
-          >
-            {Entering ? "Entering...":<span>Enter Bitcoin World #{blockHeight}</span>}
-          </button></div>
+        {xverseAvailable && !connected && (
+          <div>
+            <br />
+            <button
+              onClick={checkMember}
+              className="mt-6 w-60 px-4 py-1.5 text-white text-xs rounded hover:bg-orange-400 border border-white transition-colors"
+            >
+              {Entering ? "Entering..." : <span>Enter Bitcoin World #{blockHeight}</span>}
+            </button>
+          </div>
         )}
       </div>
     </main>
